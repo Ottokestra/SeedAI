@@ -1,9 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-<<<<<<< HEAD
-=======
 import ScrollToTop from './components/ScrollToTop';
->>>>>>> origin/dev
 import Shell from './layouts/Shell';
 import Home from './pages/Home';
 import Status from './pages/Status';
@@ -15,10 +12,7 @@ import MyChild from './pages/MyChild';
 function App() {
   return (
     <BrowserRouter>
-<<<<<<< HEAD
-=======
       <ScrollToTop />
->>>>>>> origin/dev
       <Routes>
         <Route element={<Shell />}>
           <Route path="/" element={<Home />} />

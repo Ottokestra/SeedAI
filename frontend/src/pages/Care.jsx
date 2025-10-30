@@ -17,17 +17,13 @@ export default function Care() {
   
   // 백엔드 데이터가 있으면 우선 사용, 없으면 목업 데이터 사용
   const { identification, careGuide, uploadedImageUrl } = location.state || {};
-<<<<<<< HEAD
   
   // careGuide를 CareTips 컴포넌트 형식으로 변환 (필드명 매핑)
-=======
->>>>>>> origin/dev
   const care = careGuide ? {
     id,
     name: identification?.plant_name || id,
     scientificName: identification?.scientific_name || '',
-    image: uploadedImageUrl || '/images/mimg.jpg', // 업로드한 이미지 우선 사용
-<<<<<<< HEAD
+    image: uploadedImageUrl || '/images/mimg.jpg',
     // 백엔드 필드명 → 프론트엔드 필드명 매핑
     water: careGuide.watering || '',
     light: careGuide.sunlight || '',
@@ -35,9 +31,6 @@ export default function Care() {
     humidity: careGuide.humidity || '',
     soil: careGuide.soil || '',
     tips: careGuide.tips || []
-=======
-    ...careGuide
->>>>>>> origin/dev
   } : getCareById(id);
 
   // 병해충 진단 목업 데이터 (백엔드 개발 중)
@@ -46,7 +39,7 @@ export default function Care() {
     diseases: []
   });
 
-  // 병해충 분석 시뮬레이션 (실제로는 백엔드 API 호출)
+  // 병해충 분석 시뮬레이션
   function handleDiseaseAnalysis() {
     toast({
       title: '병해충 분석 중...',
@@ -54,7 +47,6 @@ export default function Care() {
       variant: 'default',
     });
 
-    // 목업 데이터 (실제로는 백엔드 응답)
     setTimeout(() => {
       setDiseaseAnalysis({
         isAnalyzed: true,
@@ -216,7 +208,6 @@ export default function Care() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* 감염 확률 */}
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-sm font-medium">감염 확률</span>
@@ -229,7 +220,6 @@ export default function Care() {
                       />
                     </div>
 
-                    {/* 증상 */}
                     <div>
                       <h4 className="font-semibold mb-2 flex items-center gap-2">
                         <span className="text-lg">📋</span>
@@ -238,7 +228,6 @@ export default function Care() {
                       <p className="text-sm">{disease.symptoms}</p>
                     </div>
 
-                    {/* 대처 방법 */}
                     <div>
                       <h4 className="font-semibold mb-2 flex items-center gap-2">
                         <span className="text-lg">💊</span>
@@ -250,7 +239,6 @@ export default function Care() {
                 </Card>
               ))}
 
-              {/* 재분석 버튼 */}
               <Button
                 onClick={handleDiseaseAnalysis}
                 variant="outline"
@@ -267,4 +255,3 @@ export default function Care() {
     </main>
   );
 }
-
