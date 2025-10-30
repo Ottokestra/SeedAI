@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getGrowthById, getAllPlants } from '../data/growth';
 import GrowthChart from '../components/GrowthChart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,22 +23,83 @@ export default function Growth() {
   const reportRef = useRef(null);
 
   const [selectedPlantId, setSelectedPlantId] = useState(id);
+  const [showTempNotification, setShowTempNotification] = useState(false);
   
-  // 백엔드 데이터가 있으면 우선 사용, 없으면 목업 데이터 사용
+  // 백엔드 데이터가 있으면 우선 사용, 없으면 임시 데이터 사용
   const { identification, growthPrediction, uploadedImageUrl } = location.state || {};
-  const growthData = growthPrediction ? {
-    id,
-    name: identification?.plant_name || id,
-    scientificName: identification?.scientific_name || '',
-    image: uploadedImageUrl || '/images/mimg.jpg', // 업로드한 이미지 우선 사용
-    data: growthPrediction.stages?.map((stage, idx) => ({
-      month: stage.timeframe,
-      height: 15 + idx * 12, // 임시 높이 값
-      min: (15 + idx * 12) * 0.9,
-      max: (15 + idx * 12) * 1.1,
-    })) || [],
-    stages: growthPrediction.stages || []
-  } : getGrowthById(selectedPlantId);
+  
+  // 임시 성장 데이터 생성 함수
+  const createTempGrowthData = (plantName, plantId) => {
+    const baseGrowthRate = 3.5; // 기본 성장률 cm/월
+    const data = [];
+    for (let i = 1; i <= 12; i++) {
+      const height = Math.round((15 + (i - 1) * baseGrowthRate) * 10) / 10;
+      data.push({
+        month: `${i}개월`,
+        height: height,
+        min: Math.round(height * 0.9 * 10) / 10,
+        max: Math.round(height * 1.1 * 10) / 10,
+      });
+    }
+    return {
+      id: plantId || id,
+      name: plantName || '식물',
+      scientificName: identification?.scientific_name || '',
+      image: uploadedImageUrl || '/images/mimg.jpg',
+      baseGrowthRate,
+      data,
+    };
+  };
+
+  // 무조건 데이터 표시 - 우선순위: 백엔드 실제 데이터 > 임시 데이터 > 목업 데이터
+  let isRealData = false;
+  
+  const generateGrowthData = () => {
+    if (growthPrediction && growthPrediction.stages && growthPrediction.stages.length > 0) {
+      // 1. 백엔드에서 전달된 실제 성장 예측 데이터 사용
+      isRealData = true;
+      return {
+        id,
+        name: identification?.plant_name || id,
+        scientificName: identification?.scientific_name || '',
+        image: uploadedImageUrl || '/images/mimg.jpg',
+        baseGrowthRate: 3.5,
+        data: growthPrediction.stages.map((stage, idx) => ({
+          month: stage.timeframe || `${idx + 1}개월`,
+          height: stage.expected_height || (15 + idx * 3.5),
+          min: (stage.expected_height || (15 + idx * 3.5)) * 0.9,
+          max: (stage.expected_height || (15 + idx * 3.5)) * 1.1,
+        })),
+        stages: growthPrediction.stages,
+      };
+    } else if (identification) {
+      // 2. 식별 데이터만 있는 경우 -> 무조건 임시 데이터 생성
+      if (!showTempNotification) {
+        setShowTempNotification(true);
+      }
+      return createTempGrowthData(identification.plant_name, id);
+    } else {
+      // 3. 아무 데이터도 없는 경우 -> 기본 임시 데이터 생성
+      if (!showTempNotification) {
+        setShowTempNotification(true);
+      }
+      const mockData = getGrowthById(selectedPlantId);
+      return mockData || createTempGrowthData('식물', selectedPlantId || id);
+    }
+  };
+
+  const growthData = generateGrowthData() || createTempGrowthData('기본 식물', id || 'default');
+  
+  // 임시 데이터 사용 알림
+  useEffect(() => {
+    if (showTempNotification && !isRealData) {
+      toast({
+        title: '임시 데이터 표시 중',
+        description: '백엔드 개발 중이므로 임시 성장 데이터를 표시합니다.',
+        variant: 'default',
+      });
+    }
+  }, [showTempNotification, isRealData, toast]);
   
   const allPlants = getAllPlants();
 
@@ -69,30 +130,7 @@ export default function Growth() {
     }
   }
 
-  // 404 처리
-  if (!growthData) {
-    return (
-      <main className="w-full flex items-center justify-center px-4 py-12">
-        <Card className="max-w-md w-full rounded-2xl shadow-lg">
-          <CardContent className="pt-10 pb-8 text-center space-y-4">
-            <h1 className="text-3xl font-bold text-emerald-800">데이터를 찾을 수 없습니다</h1>
-            <p className="text-emerald-700">
-              요청하신 식물 ID(<code className="bg-emerald-100 px-2 py-1 rounded">{id}</code>)에 대한
-              성장 데이터가 존재하지 않습니다.
-            </p>
-            <Button
-              onClick={() => navigate(-1)}
-              className="mt-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
-              aria-label="이전 페이지로 돌아가기"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-              뒤로가기
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
+  // growthData는 항상 존재 (임시 데이터라도 생성됨)
 
   return (
     <main className="w-full py-12 px-4">
@@ -105,7 +143,7 @@ export default function Growth() {
               성장 예측
             </h1>
             <p className="text-lg text-emerald-700">
-              {growthData.name}의 12개월 성장 예측 데이터입니다.
+              {growthData?.name || '식물'}의 12개월 성장 예측 데이터입니다.
             </p>
           </div>
           <div className="flex gap-3 items-center">
@@ -145,13 +183,13 @@ export default function Growth() {
                 <div className="text-center">
                   <p className="text-sm text-emerald-600 mb-1">기본 성장률</p>
                   <p className="text-2xl font-bold text-emerald-800">
-                    {growthData.baseGrowthRate} cm/월
+                    {growthData?.baseGrowthRate || 3.5} cm/월
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-emerald-600 mb-1">12개월 후 예상 높이</p>
                   <p className="text-2xl font-bold text-emerald-800">
-                    {growthData.data[11].height} cm
+                    {growthData?.data?.[11]?.height || growthData?.data?.[growthData.data.length - 1]?.height || 50} cm
                   </p>
                 </div>
                 <div className="text-center">
@@ -171,7 +209,11 @@ export default function Growth() {
                 <CardTitle className="text-emerald-800">12개월 성장 예측 차트</CardTitle>
               </CardHeader>
               <CardContent>
-                <GrowthChart data={growthData.data} plantName={growthData.name} />
+                {growthData?.data && growthData.data.length > 0 ? (
+                  <GrowthChart data={growthData.data} plantName={growthData.name} />
+                ) : (
+                  <p className="text-center text-emerald-600 py-8">데이터를 불러오는 중...</p>
+                )}
               </CardContent>
             </Card>
           </section>
@@ -183,37 +225,41 @@ export default function Growth() {
                 <CardTitle className="text-emerald-800">월별 상세 데이터</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm" role="table">
-                    <thead>
-                      <tr className="border-b-2 border-emerald-200">
-                        <th className="text-left py-3 px-4 text-emerald-800 font-bold">기간</th>
-                        <th className="text-right py-3 px-4 text-emerald-800 font-bold">예상 높이</th>
-                        <th className="text-right py-3 px-4 text-emerald-800 font-bold">최소</th>
-                        <th className="text-right py-3 px-4 text-emerald-800 font-bold">최대</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {growthData.data.map((row, idx) => (
-                        <tr
-                          key={idx}
-                          className="border-b border-emerald-100 hover:bg-emerald-50"
-                        >
-                          <td className="py-3 px-4 text-emerald-700">{row.month}</td>
-                          <td className="py-3 px-4 text-right font-bold text-emerald-800">
-                            {row.height} cm
-                          </td>
-                          <td className="py-3 px-4 text-right text-emerald-600">
-                            {row.min} cm
-                          </td>
-                          <td className="py-3 px-4 text-right text-emerald-600">
-                            {row.max} cm
-                          </td>
+                {growthData?.data && growthData.data.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm" role="table">
+                      <thead>
+                        <tr className="border-b-2 border-emerald-200">
+                          <th className="text-left py-3 px-4 text-emerald-800 font-bold">기간</th>
+                          <th className="text-right py-3 px-4 text-emerald-800 font-bold">예상 높이</th>
+                          <th className="text-right py-3 px-4 text-emerald-800 font-bold">최소</th>
+                          <th className="text-right py-3 px-4 text-emerald-800 font-bold">최대</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {growthData.data.map((row, idx) => (
+                          <tr
+                            key={idx}
+                            className="border-b border-emerald-100 hover:bg-emerald-50"
+                          >
+                            <td className="py-3 px-4 text-emerald-700">{row.month}</td>
+                            <td className="py-3 px-4 text-right font-bold text-emerald-800">
+                              {row.height} cm
+                            </td>
+                            <td className="py-3 px-4 text-right text-emerald-600">
+                              {row.min} cm
+                            </td>
+                            <td className="py-3 px-4 text-right text-emerald-600">
+                              {row.max} cm
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-center text-emerald-600 py-8">데이터를 불러오는 중...</p>
+                )}
               </CardContent>
             </Card>
           </section>
