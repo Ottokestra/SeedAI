@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Upload, Droplet, Sun, Thermometer, Info, TrendingUp, Loader2 } from 'lucide-react';
+import { Upload, Droplet, Sun, Thermometer, Info, TrendingUp, MessageSquare, Bot, User, Send } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import GrowthChart from './GrowthChart';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 // --- 기능 카드 데이터 ---
 const features = [
@@ -27,10 +29,10 @@ const features = [
     icon: <TrendingUp className="h-8 w-8 text-green-600" />,
   },
   {
-    id: 'disease_management',
-    title: '질병 관리 및 진단',
-    description: '식물의 이상 증상을 조기에 발견하고, 질병을 진단하며, 치료 방법을 안내합니다.',
-    icon: <Loader2 className="h-8 w-8 text-green-600" />,
+    id: 'care_chat',
+    title: '식물 관리법 AI 챗봇',
+    description: '식물 관리에 대한 모든 궁금증을 AI 챗봇에게 물어보세요. 실시간으로 맞춤형 답변을 제공합니다.',
+    icon: <MessageSquare className="h-8 w-8 text-green-600" />,
   },
 ];
 
@@ -118,7 +120,7 @@ function FeatureDialog({ feature }) {
         {feature.id === 'identification' && <IdentificationContent />}
         {feature.id === 'care_guide' && <CareGuideContent />}
         {feature.id === 'growth_prediction' && <GrowthPredictionContent />}
-        {feature.id === 'disease_management' && <IdentificationContent />} 
+        {feature.id === 'care_chat' && <CareChatContent />} 
       </DialogContent>
     </Dialog>
   );
@@ -267,6 +269,164 @@ function GrowthPredictionContent() {
             실제 성장은 물주기, 햇빛, 온도 등의 환경 요인에 따라 달라질 수 있습니다.
           </p>
         </div>
+      </div>
+    </>
+  );
+}
+
+// --- 4. '식물 관리법 AI 챗봇' 팝업 (챗봇 시연) ---
+function CareChatContent() {
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      role: 'assistant',
+      content: '안녕하세요! 🌱 AI 식물 관리 상담사입니다.\n식물 관리에 대해 무엇이든 물어보세요!',
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  // 예시 질문
+  const exampleQuestions = [
+    '몬스테라 물주기는 어떻게 하나요?',
+    '잎이 노랗게 변하는 이유는?',
+    '햇빛을 많이 받아야 하는 식물은?',
+  ];
+
+  const handleSendMessage = () => {
+    if (!input.trim() || isTyping) return;
+
+    // 사용자 메시지 추가
+    const userMessage = {
+      id: Date.now(),
+      role: 'user',
+      content: input.trim(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsTyping(true);
+
+    // AI 응답 시뮬레이션
+    setTimeout(() => {
+      const aiResponse = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: `"${userMessage.content}"에 대한 답변입니다.\n\n몬스테라의 경우 흙이 마르면 충분히 물을 주세요. 간접광이 좋으며, 18-27°C가 적당합니다. 🌿\n\n더 궁금한 점이 있으시면 언제든 물어보세요!`,
+      };
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 1000);
+  };
+
+  const handleExampleClick = (question) => {
+    setInput(question);
+  };
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-2xl flex items-center gap-2">
+          <MessageSquare className="w-6 h-6 text-green-600" />
+          식물 관리법 AI 챗봇
+        </DialogTitle>
+        <DialogDescription>
+          식물 관리에 대한 모든 궁금증을 AI에게 물어보세요
+        </DialogDescription>
+      </DialogHeader>
+      
+      {/* 메시지 영역 */}
+      <div className="max-h-[400px] overflow-y-auto space-y-3 py-4 px-2">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {message.role === 'assistant' && (
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-green-600" />
+              </div>
+            )}
+            <div
+              className={`max-w-[75%] rounded-lg p-3 ${
+                message.role === 'user'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-100 text-gray-800'
+              }`}
+            >
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+            </div>
+            {message.role === 'user' && (
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </div>
+            )}
+          </div>
+        ))}
+        {isTyping && (
+          <div className="flex gap-2 justify-start">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="bg-gray-100 rounded-lg p-3">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 예시 질문 (메시지가 1개일 때만) */}
+      {messages.length === 1 && (
+        <div className="space-y-2 pb-4">
+          <p className="text-sm text-gray-600 font-medium">💡 이런 질문을 해보세요:</p>
+          <div className="flex flex-wrap gap-2">
+            {exampleQuestions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => handleExampleClick(question)}
+                className="text-xs px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 입력 영역 */}
+      <div className="flex gap-2 pt-2 border-t">
+        <Textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage();
+            }
+          }}
+          placeholder="질문을 입력하세요..."
+          className="flex-1 min-h-[60px] resize-none"
+          disabled={isTyping}
+        />
+        <Button
+          onClick={handleSendMessage}
+          disabled={isTyping || !input.trim()}
+          className="self-end bg-green-600 hover:bg-green-700"
+        >
+          <Send className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* 전체 기능 링크 */}
+      <div className="pt-3 border-t">
+        <Link to="/care">
+          <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50">
+            전체 챗봇 기능 사용하기 →
+          </Button>
+        </Link>
       </div>
     </>
   );

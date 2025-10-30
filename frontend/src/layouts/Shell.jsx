@@ -15,7 +15,7 @@ export default function Shell() {
             />
             <div className="leading-tight">
               <div className="font-semibold text-lg text-gray-800" style={{ letterSpacing: '0.02em' }}>새싹 아이</div>
-              <div className="text-[10px] tracking-[0.25em] text-gray-500 font-light">PLANT-AI</div>
+              <div className="text-[10px] tracking-[0.25em] text-gray-500 font-light">SEED-AI</div>
             </div>
           </Link>
           
@@ -28,6 +28,14 @@ export default function Shell() {
               }
             >
               종 식별
+            </NavLink>
+            <NavLink 
+              to="/care" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              식물Care
             </NavLink>
             <NavLink 
               to="/mychild" 

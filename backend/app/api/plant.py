@@ -48,6 +48,19 @@ async def analyze_plant(file: UploadFile = File(...)) -> PlantAnalysisResponse:
             contents
         )
         
+<<<<<<< HEAD
+        # 신뢰도가 낮은 경우에도 기본 관리 가이드 제공
+        is_low_confidence = identification.confidence < 0.1
+        
+        # 2단계 & 3단계: 관리법 생성 및 성장 예측 (병렬 처리)
+        # 인식 불가 시에도 식물명으로 기본 가이드 생성 시도
+        plant_name_for_guide = identification.plant_name if not is_low_confidence else "일반 관엽식물"
+        
+        care_guide_task = loop.run_in_executor(
+            executor,
+            generate_care_guide,
+            plant_name_for_guide
+=======
         if identification.confidence < 0.1:
             return PlantAnalysisResponse(
                 identification=identification,
@@ -62,12 +75,17 @@ async def analyze_plant(file: UploadFile = File(...)) -> PlantAnalysisResponse:
             executor,
             generate_care_guide,
             identification.plant_name
+>>>>>>> origin/dev
         )
         
         growth_prediction_task = loop.run_in_executor(
             executor,
             generate_growth_prediction,
+<<<<<<< HEAD
+            plant_name_for_guide
+=======
             identification.plant_name
+>>>>>>> origin/dev
         )
         
         # 두 작업이 모두 완료될 때까지 대기
@@ -77,6 +95,18 @@ async def analyze_plant(file: UploadFile = File(...)) -> PlantAnalysisResponse:
         )
         
         # 종합 결과 반환
+<<<<<<< HEAD
+        if is_low_confidence:
+            return PlantAnalysisResponse(
+                identification=identification,
+                care_guide=care_guide,
+                growth_prediction=growth_prediction,
+                success=False,
+                message="식물을 정확히 식별하지 못했습니다. 일반적인 관엽식물 관리 가이드를 제공합니다. 더 명확한 이미지를 업로드하시면 정확한 정보를 받을 수 있습니다."
+            )
+        
+=======
+>>>>>>> origin/dev
         return PlantAnalysisResponse(
             identification=identification,
             care_guide=care_guide,
@@ -130,6 +160,11 @@ async def analyze_plant_auto(file: UploadFile = File(...)) -> PlantAnalysisRespo
             contents
         )
         
+<<<<<<< HEAD
+        # 신뢰도가 낮은 경우에도 기본 관리 가이드 제공
+        is_low_confidence = identification.confidence < 0.1
+        plant_name_for_guide = identification.plant_name if not is_low_confidence else "일반 관엽식물"
+=======
         if identification.confidence < 0.1:
             return PlantAnalysisResponse(
                 identification=identification,
@@ -138,18 +173,27 @@ async def analyze_plant_auto(file: UploadFile = File(...)) -> PlantAnalysisRespo
                 success=False,
                 message="식물을 식별할 수 없습니다. 더 명확한 이미지를 업로드해주세요."
             )
+>>>>>>> origin/dev
         
         # 관리법 생성 및 성장 예측 (병렬 처리)
         care_guide_task = loop.run_in_executor(
             executor,
             generate_care_guide,
+<<<<<<< HEAD
+            plant_name_for_guide
+=======
             identification.plant_name
+>>>>>>> origin/dev
         )
         
         growth_prediction_task = loop.run_in_executor(
             executor,
             generate_growth_prediction,
+<<<<<<< HEAD
+            plant_name_for_guide
+=======
             identification.plant_name
+>>>>>>> origin/dev
         )
         
         care_guide, growth_prediction = await asyncio.gather(
@@ -157,6 +201,18 @@ async def analyze_plant_auto(file: UploadFile = File(...)) -> PlantAnalysisRespo
             growth_prediction_task
         )
         
+<<<<<<< HEAD
+        if is_low_confidence:
+            return PlantAnalysisResponse(
+                identification=identification,
+                care_guide=care_guide,
+                growth_prediction=growth_prediction,
+                success=False,
+                message="식물을 정확히 식별하지 못했습니다. 일반적인 관엽식물 관리 가이드를 제공합니다. 더 명확한 이미지를 업로드하시면 정확한 정보를 받을 수 있습니다."
+            )
+        
+=======
+>>>>>>> origin/dev
         return PlantAnalysisResponse(
             identification=identification,
             care_guide=care_guide,
@@ -210,6 +266,11 @@ async def analyze_plant_v2(file: UploadFile = File(...)) -> PlantAnalysisRespons
             contents
         )
         
+<<<<<<< HEAD
+        # 신뢰도가 낮은 경우에도 기본 관리 가이드 제공
+        is_low_confidence = identification.confidence < 0.1
+        plant_name_for_guide = identification.plant_name if not is_low_confidence else "일반 관엽식물"
+=======
         if identification.confidence < 0.1:
             return PlantAnalysisResponse(
                 identification=identification,
@@ -218,18 +279,27 @@ async def analyze_plant_v2(file: UploadFile = File(...)) -> PlantAnalysisRespons
                 success=False,
                 message="식물을 식별할 수 없습니다. 더 명확한 이미지를 업로드해주세요."
             )
+>>>>>>> origin/dev
         
         # 관리법 생성 및 성장 예측 (병렬 처리)
         care_guide_task = loop.run_in_executor(
             executor,
             generate_care_guide,
+<<<<<<< HEAD
+            plant_name_for_guide
+=======
             identification.plant_name
+>>>>>>> origin/dev
         )
         
         growth_prediction_task = loop.run_in_executor(
             executor,
             generate_growth_prediction,
+<<<<<<< HEAD
+            plant_name_for_guide
+=======
             identification.plant_name
+>>>>>>> origin/dev
         )
         
         care_guide, growth_prediction = await asyncio.gather(
@@ -237,6 +307,18 @@ async def analyze_plant_v2(file: UploadFile = File(...)) -> PlantAnalysisRespons
             growth_prediction_task
         )
         
+<<<<<<< HEAD
+        if is_low_confidence:
+            return PlantAnalysisResponse(
+                identification=identification,
+                care_guide=care_guide,
+                growth_prediction=growth_prediction,
+                success=False,
+                message="식물을 정확히 식별하지 못했습니다. 일반적인 관엽식물 관리 가이드를 제공합니다. 더 명확한 이미지를 업로드하시면 정확한 정보를 받을 수 있습니다."
+            )
+        
+=======
+>>>>>>> origin/dev
         return PlantAnalysisResponse(
             identification=identification,
             care_guide=care_guide,

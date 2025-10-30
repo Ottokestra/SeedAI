@@ -166,10 +166,17 @@ def load_translator():
 
 def translate_to_korean(text: str) -> str:
     """
+<<<<<<< HEAD
+    GPT-4o-mini를 사용하여 영어 식물 이름을 한국어로 번역합니다.
+    
+    Args:
+        text: 영어 식물 이름
+=======
     영어 식물 이름을 한국어로 번역합니다.
     
     Args:
         text: 영어 텍스트
+>>>>>>> origin/dev
         
     Returns:
         str: 한국어 번역 결과
@@ -181,6 +188,38 @@ def translate_to_korean(text: str) -> str:
         return _translation_cache[text]
     
     try:
+<<<<<<< HEAD
+        # OpenAI 클라이언트 import
+        from app.services.guide import load_openai_client
+        
+        client = load_openai_client()
+        if client is None:
+            print(f"[번역 실패] OpenAI 클라이언트 없음: {text}")
+            return text
+        
+        # GPT-4o-mini로 식물 이름 번역
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a plant name translator. Translate English plant names to Korean names that are commonly used in South Korea. Return only the Korean name, no additional text."
+                },
+                {
+                    "role": "user",
+                    "content": f"Translate this plant name to Korean: {text}"
+                }
+            ],
+            temperature=0.3,
+            max_tokens=50
+        )
+        
+        translated = response.choices[0].message.content.strip()
+        
+        # 캐시에 저장
+        _translation_cache[text] = translated
+        print(f"[GPT 번역] {text} → {translated}")
+=======
         translator = load_translator()
         
         if translator is None:
@@ -200,11 +239,16 @@ def translate_to_korean(text: str) -> str:
         # 캐시에 저장
         _translation_cache[text] = translated
         print(f"[번역] {text} → {translated}")
+>>>>>>> origin/dev
         
         return translated
         
     except Exception as e:
+<<<<<<< HEAD
+        print(f"[번역 오류] {text}: {e}")
+=======
         print(f"번역 오류: {e}")
+>>>>>>> origin/dev
         # 오류 발생 시 원문 반환
         return text
 
