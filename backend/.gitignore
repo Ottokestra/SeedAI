@@ -64,3 +64,13 @@ htmlcov/
 temp/
 tmp/
 
+# --- Env secrets (global) ---
+.env
+.env.*
+**/.env
+**/.env.*
+# keep only examples
+!.env.example
+!**/.env.example
+!backend/.env.example
+!frontend/.env.example
