@@ -64,6 +64,7 @@ htmlcov/
 temp/
 tmp/
 
+<<<<<<< HEAD
 # --- Env secrets (global) ---
 .env
 .env.*
@@ -74,3 +75,5 @@ tmp/
 !**/.env.example
 !backend/.env.example
 !frontend/.env.example
+=======
+>>>>>>> origin/dev
