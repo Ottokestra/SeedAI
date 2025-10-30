@@ -4,7 +4,11 @@ import ResultList from '../components/ResultList';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { usePersistedState } from '@/hooks/usePersistedState';
+<<<<<<< HEAD
 import { Loader2, Upload } from 'lucide-react';
+=======
+import { Loader2, Upload, X, RefreshCw } from 'lucide-react';
+>>>>>>> origin/dev
 import { motion } from 'framer-motion';
 
 export default function Identify() {
@@ -17,9 +21,16 @@ export default function Identify() {
   // 임시 상태
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
 
   const handleFileChange = (e) => {
     const f = e.target.files?.[0];
+=======
+  const [isDragging, setIsDragging] = useState(false);
+
+  // 파일 처리 공통 함수
+  const processFile = (f) => {
+>>>>>>> origin/dev
     if (!f) return;
     
     if (!f.type.startsWith('image/')) {
@@ -37,6 +48,82 @@ export default function Identify() {
     setResult(null);
   };
 
+<<<<<<< HEAD
+=======
+  const handleFileChange = (e) => {
+    const f = e.target.files?.[0];
+    processFile(f);
+  };
+
+  // Drag & Drop 핸들러
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // dragOver는 계속 발생하므로 상태는 dragEnter에서만 설정
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 드래그 영역에 들어올 때만 상태 변경
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 실제로 영역을 벗어날 때만 상태 변경 (자식 요소로 이동 시 제외)
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      processFile(files[0]);
+    }
+  };
+
+  // 페이지 전체에서 드래그 앤 드롭 기본 동작 방지
+  useEffect(() => {
+    const preventDefaults = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    // 전체 페이지에서 드래그 시 브라우저 기본 동작 방지
+    window.addEventListener('dragover', preventDefaults);
+    window.addEventListener('drop', preventDefaults);
+
+    return () => {
+      window.removeEventListener('dragover', preventDefaults);
+      window.removeEventListener('drop', preventDefaults);
+    };
+  }, []);
+
+  const handleRemoveImage = () => {
+    setFile(null);
+    setPreview('');
+    setResult(null);
+    
+    // input 요소 리셋
+    const fileInput = document.getElementById('file-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+
+    toast({
+      title: '이미지가 삭제되었습니다',
+      description: '새로운 이미지를 업로드해주세요.',
+    });
+  };
+
+>>>>>>> origin/dev
   const handleSubmit = async () => {
     if (!file && !preview) {
       toast({
@@ -134,6 +221,7 @@ export default function Identify() {
 
           <label
             htmlFor="file-upload"
+<<<<<<< HEAD
             className="block w-full aspect-video rounded-xl border-2 border-dashed border-emerald-300 bg-white cursor-pointer hover:bg-emerald-50 transition overflow-hidden"
             style={bgStyle}
           >
@@ -154,6 +242,79 @@ export default function Identify() {
             <p className="text-sm text-emerald-600 text-center">
               💡 다른 이미지로 변경하려면 위 영역을 클릭하세요
             </p>
+=======
+            className={`block w-full aspect-video rounded-xl border-2 border-dashed bg-white cursor-pointer transition-all overflow-hidden relative ${
+              isDragging 
+                ? 'border-emerald-500 bg-emerald-100 scale-[1.02]' 
+                : 'border-emerald-300 hover:bg-emerald-50'
+            }`}
+            style={bgStyle}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {!preview && (
+              <div className="w-full h-full flex flex-col items-center justify-center text-center p-8 pointer-events-none">
+                <Upload 
+                  className={`w-16 h-16 mb-4 transition-all ${
+                    isDragging ? 'text-emerald-600 scale-110' : 'text-emerald-500'
+                  }`} 
+                  aria-hidden="true" 
+                />
+                <p className={`font-medium text-lg mb-2 transition-colors ${
+                  isDragging ? 'text-emerald-800' : 'text-emerald-700'
+                }`}>
+                  {isDragging ? '이미지를 여기에 놓으세요' : '이미지 1장을 업로드하세요'}
+                </p>
+                <p className="text-emerald-600 text-sm">
+                  {isDragging ? '파일을 드롭하여 업로드' : '클릭하여 파일 선택 또는 드래그 & 드롭 (jpg, png 등)'}
+                </p>
+              </div>
+            )}
+            
+            {/* 드래그 중 오버레이 (미리보기 이미지가 있을 때) */}
+            {preview && isDragging && (
+              <div className="absolute inset-0 bg-emerald-500/80 flex flex-col items-center justify-center z-10 pointer-events-none">
+                <Upload className="w-16 h-16 mb-4 text-white animate-bounce" aria-hidden="true" />
+                <p className="text-white font-bold text-xl mb-2">이미지를 여기에 놓으세요</p>
+                <p className="text-white/90 text-sm">새로운 이미지로 변경됩니다</p>
+              </div>
+            )}
+          </label>
+
+          {preview && (
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm text-emerald-600 text-center">
+                💡 다른 이미지로 변경하려면 위 영역을 클릭/드래그하거나 아래 버튼을 사용하세요
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleRemoveImage}
+                  variant="outline"
+                  className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+                  aria-label="이미지 삭제"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  이미지 삭제
+                </Button>
+                <label htmlFor="file-upload">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-emerald-300 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 cursor-pointer"
+                    aria-label="다시 선택"
+                    asChild
+                  >
+                    <span>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      다시 선택
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
+>>>>>>> origin/dev
           )}
         </motion.div>
 

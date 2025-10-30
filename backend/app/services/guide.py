@@ -1,17 +1,25 @@
+<<<<<<< HEAD
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 import json
 import re
 from typing import Optional
 from openai import OpenAI
+=======
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+>>>>>>> origin/dev
 from app.config import settings
 from app.models.schemas import CareGuide
 
 # 전역 변수로 모델 캐싱
 _text_model = None
 _tokenizer = None
+<<<<<<< HEAD
 _openai_client = None
 _pllama_pipeline = None
+=======
+>>>>>>> origin/dev
 
 
 def load_text_generator():
@@ -44,6 +52,7 @@ def load_text_generator():
     return _tokenizer, _text_model
 
 
+<<<<<<< HEAD
 def load_openai_client():
     """OpenAI 클라이언트를 로드합니다."""
     global _openai_client
@@ -320,6 +329,11 @@ def convert_to_korean_standard(pllama_response: str, plant_name: str) -> Optiona
 def generate_care_guide(plant_name: str) -> CareGuide:
     """
     GPT-4.0 Mini를 사용하여 식물 관리 가이드를 생성합니다.
+=======
+def generate_care_guide(plant_name: str) -> CareGuide:
+    """
+    Transformers 라이브러리를 직접 사용하여 식물 관리 가이드를 생성합니다.
+>>>>>>> origin/dev
     
     Args:
         plant_name: 식물 종명
@@ -327,6 +341,7 @@ def generate_care_guide(plant_name: str) -> CareGuide:
     Returns:
         CareGuide: 식물 관리 가이드
     """
+<<<<<<< HEAD
     print(f"[가이드 생성 시작] 식물명: {plant_name}")
     
     # GPT-4.0 Mini로 직접 생성
@@ -353,6 +368,10 @@ def generate_care_guide(plant_name: str) -> CareGuide:
     
     # 최종 fallback: 기본 가이드 반환
     print(f"[경고] AI 생성 실패, 기본 가이드 사용: {plant_name}")
+=======
+    # 실제 AI 생성 대신 규칙 기반으로 관리 가이드 제공
+    # (텍스트 생성 모델은 리소스가 많이 필요하고 한국어 지원이 제한적임)
+>>>>>>> origin/dev
     return get_default_care_guide(plant_name)
 
 
