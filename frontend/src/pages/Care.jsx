@@ -17,12 +17,20 @@ export default function Care() {
   
   // 백엔드 데이터가 있으면 우선 사용, 없으면 목업 데이터 사용
   const { identification, careGuide, uploadedImageUrl } = location.state || {};
+  
+  // careGuide를 CareTips 컴포넌트 형식으로 변환 (필드명 매핑)
   const care = careGuide ? {
     id,
     name: identification?.plant_name || id,
     scientificName: identification?.scientific_name || '',
     image: uploadedImageUrl || '/images/mimg.jpg', // 업로드한 이미지 우선 사용
-    ...careGuide
+    // 백엔드 필드명 → 프론트엔드 필드명 매핑
+    water: careGuide.watering || '',
+    light: careGuide.sunlight || '',
+    temp: careGuide.temperature || '',
+    humidity: careGuide.humidity || '',
+    soil: careGuide.soil || '',
+    tips: careGuide.tips || []
   } : getCareById(id);
 
   // 병해충 진단 목업 데이터 (백엔드 개발 중)

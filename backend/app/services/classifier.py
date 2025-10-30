@@ -166,10 +166,10 @@ def load_translator():
 
 def translate_to_korean(text: str) -> str:
     """
-    영어 식물 이름을 한국어로 번역합니다.
+    GPT-4o-mini를 사용하여 영어 식물 이름을 한국어로 번역합니다.
     
     Args:
-        text: 영어 텍스트
+        text: 영어 식물 이름
         
     Returns:
         str: 한국어 번역 결과
@@ -181,30 +181,41 @@ def translate_to_korean(text: str) -> str:
         return _translation_cache[text]
     
     try:
-        translator = load_translator()
+        # OpenAI 클라이언트 import
+        from app.services.guide import load_openai_client
         
-        if translator is None:
-            # 번역 모델 로드 실패 시 원문 반환
+        client = load_openai_client()
+        if client is None:
+            print(f"[번역 실패] OpenAI 클라이언트 없음: {text}")
             return text
         
-        # NLLB 번역 실행
-        result = translator(
-            text,
-            src_lang="eng_Latn",
-            tgt_lang="kor_Hang",
-            max_length=100
+        # GPT-4o-mini로 식물 이름 번역
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a plant name translator. Translate English plant names to Korean names that are commonly used in South Korea. Return only the Korean name, no additional text."
+                },
+                {
+                    "role": "user",
+                    "content": f"Translate this plant name to Korean: {text}"
+                }
+            ],
+            temperature=0.3,
+            max_tokens=50
         )
         
-        translated = result[0]['translation_text']
+        translated = response.choices[0].message.content.strip()
         
         # 캐시에 저장
         _translation_cache[text] = translated
-        print(f"[번역] {text} → {translated}")
+        print(f"[GPT 번역] {text} → {translated}")
         
         return translated
         
     except Exception as e:
-        print(f"번역 오류: {e}")
+        print(f"[번역 오류] {text}: {e}")
         # 오류 발생 시 원문 반환
         return text
 
