@@ -1,15 +1,21 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import ImageUploader from '@/components/ImageUploader';
 import ResultDisplay from '@/components/ResultDisplay';
-import "./plant-detect.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 
 export default function PlantDetect() {
+    const location = useLocation();
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    // 관리법 페이지에서 전달된 이미지 URL
+    const { uploadedImageUrl, plantName } = location.state || {};
 
     const handleUpload = async (formData) => {
         setLoading(true);
@@ -51,34 +57,52 @@ export default function PlantDetect() {
     };
 
     return (
-        <div className="pd-app">
-            <header className="pd-header">
-                <h1>🌿 Plant Disease Detection</h1>
-                <p className="pd-subtitle">YOLOv8 기반 식물 병충해 자동 감지 시스템</p>
-            </header>
+        <div className="w-full min-h-[calc(100vh-73px)] bg-emerald-50 py-12 px-4">
+            <div className="max-w-3xl mx-auto">
+                {/* 헤더 */}
+                <motion.header
+                    className="text-center mb-8"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <h1 className="text-4xl font-bold text-emerald-800 mb-3">🐛 병충해 진단</h1>
+                    <p className="text-lg text-emerald-700">
+                        식물 사진을 업로드하면 AI가 자동으로 병충해를 진단합니다
+                    </p>
+                </motion.header>
 
-            <main className="pd-main">
-                {!result && <ImageUploader onUpload={handleUpload} loading={loading} />}
+                {/* 메인 콘텐츠 */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                    {!result && <ImageUploader onUpload={handleUpload} loading={loading} initialImageUrl={uploadedImageUrl} initialPlantName={plantName} />}
 
-                {loading && (
-                    <div className="pd-loading">
-                        <div className="pd-spinner" />
-                        <p>이미지를 분석하고 있습니다...</p>
-                    </div>
-                )}
+                    {loading && (
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+                                <div className="text-center">
+                                    <Loader2 className="w-12 h-12 mx-auto mb-4 text-emerald-500 animate-spin" />
+                                    <h3 className="text-xl font-bold text-emerald-800 mb-2">이미지 분석 중...</h3>
+                                    <p className="text-emerald-600">
+                                        AI가 병충해를 진단하고 있습니다. 잠시만 기다려주세요.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-                {error && (
-                    <div className="pd-error">
-                        <p>⚠️ {error}</p>
-                    </div>
-                )}
+                    {error && (
+                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
+                            <p className="text-red-700 font-medium">⚠️ {error}</p>
+                        </div>
+                    )}
 
-                {result && !loading && <ResultDisplay result={result} />}
-            </main>
-
-            <footer className="pd-footer">
-                <p>Powered by YOLOv8 & FastAPI & React</p>
-            </footer>
+                    {result && !loading && <ResultDisplay result={result} />}
+                </motion.div>
+            </div>
         </div>
     );
 }

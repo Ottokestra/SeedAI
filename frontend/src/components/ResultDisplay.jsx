@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import './ResultDisplay.css';
 
 function ResultDisplay({ result }) {
+  const navigate = useNavigate();
   if (!result) return null;
 
   const { 
@@ -139,7 +141,7 @@ function ResultDisplay({ result }) {
         </div>
       )}
 
-      {/* 다시 분석 버튼 */}
+      {/* 액션 버튼들 */}
       <div className="action-buttons">
         <button
           className="new-analysis-button"
@@ -147,6 +149,24 @@ function ResultDisplay({ result }) {
         >
           🔄 새로운 이미지 분석
         </button>
+        {species?.name && species.name !== '알 수 없음' && (
+          <button
+            className="predict-button"
+            onClick={() => {
+              const plantId = species.name.toLowerCase().replace(/\s+/g, '-');
+              navigate(`/predict/${plantId}`, {
+                state: {
+                  identification: {
+                    plant_name: species.name,
+                    confidence: species.confidence
+                  }
+                }
+              });
+            }}
+          >
+            📈 예측해줘
+          </button>
+        )}
       </div>
     </div>
   );

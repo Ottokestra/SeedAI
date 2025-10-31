@@ -58,9 +58,7 @@ backend/venv/
 backend/.venv/
 
 # Python packaging artifacts
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/

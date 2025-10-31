@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Upload, Droplet, Sun, Thermometer, Info, TrendingUp, MessageSquare, Bot, User, Send, Loader2 } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Upload, Droplet, Sun, Thermometer, Info, TrendingUp, Loader2, Bug } from 'lucide-react';
 import GrowthChart from './GrowthChart';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -17,6 +16,12 @@ const features = [
     icon: <Upload className="h-8 w-8 text-green-600" />,
   },
   {
+    id: 'diagnosis',
+    title: '병충해 진단',
+    description: '식물의 잎을 촬영하면 AI가 병충해를 자동으로 감지하고, GPT 기반 맞춤형 치료법을 제공합니다.',
+    icon: <Bug className="h-8 w-8 text-green-600" />,
+  },
+  {
     id: 'care_guide',
     title: '맞춤형 관리법 제공',
     description: '식별된 식물에 최적화된 물주기, 햇빛, 온도, 습도 등 상세한 관리 가이드를 제공합니다.',
@@ -27,12 +32,6 @@ const features = [
     title: '성장 예상 분석',
     description: '현재 환경과 관리 상태를 기반으로 식물의 성장을 예측하고, 최적의 성장 조언을 제안합니다.',
     icon: <TrendingUp className="h-8 w-8 text-green-600" />,
-  },
-  {
-    id: 'care_chat',
-    title: '식물 관리법 AI 챗봇',
-    description: '식물 관리에 대한 모든 궁금증을 AI 챗봇에게 물어보세요. 실시간으로 맞춤형 답변을 제공합니다.',
-    icon: <MessageSquare className="h-8 w-8 text-green-600" />,
   },
 ];
 
@@ -118,9 +117,9 @@ function FeatureDialog({ feature }) {
       <DialogContent className="sm:max-w-2xl">
         {/* 기능 ID별로 다른 팝업 콘텐츠를 렌더링합니다. */}
         {feature.id === 'identification' && <IdentificationContent />}
+        {feature.id === 'diagnosis' && <DiagnosisContent />}
         {feature.id === 'care_guide' && <CareGuideContent />}
         {feature.id === 'growth_prediction' && <GrowthPredictionContent />}
-        {feature.id === 'care_chat' && <CareChatContent />} 
       </DialogContent>
     </Dialog>
   );
@@ -247,7 +246,136 @@ function IdentificationContent() {
   );
 }
 
-// --- 2. '맞춤형 관리법' 팝업 (텍스트 정보) ---
+// --- 2. '병충해 진단' 팝업 (진단 시연) ---
+function DiagnosisContent() {
+  const [status, setStatus] = useState('idle');
+
+  const handleDiagnose = () => {
+    setStatus('loading');
+    // 3초 후 진단 완료
+    setTimeout(() => {
+      setStatus('success');
+    }, 3000);
+  };
+
+  const handleReset = () => {
+    setStatus('idle');
+  };
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl">🐛 병충해 진단</DialogTitle>
+        <DialogDescription className="text-sm">
+          시연용 데모입니다. 실제 기능은 "진단해줘" 메뉴를 이용하세요.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="py-3">
+        {status === 'idle' && (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-emerald-200 bg-emerald-50/30 p-6">
+            <img
+              src="https://images.unsplash.com/photo-1459156212016-c812468e2115?q=80&w=800&auto=format&fit=crop"
+              alt="시연용 몬스테라 이미지"
+              className="w-full h-40 rounded-lg object-cover shadow-md mb-3"
+            />
+            <p className="text-gray-700 text-center font-medium mb-1">
+              🔍 진단할 준비가 완료되었습니다
+            </p>
+            <p className="text-gray-500 text-center text-xs">
+              아래 버튼을 눌러 AI 병충해 진단을 체험해보세요
+            </p>
+          </div>
+        )}
+        {status === 'loading' && (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-emerald-300 bg-emerald-50 p-8">
+            <Loader2 className="h-12 w-12 animate-spin text-emerald-600 mb-3" />
+            <p className="font-semibold text-gray-800 mb-1">AI 진단 중...</p>
+            <p className="text-xs text-gray-600">
+              YOLOv8이 병충해를 감지하고 있습니다
+            </p>
+          </div>
+        )}
+        {status === 'success' && (
+          <div className="rounded-lg border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-green-50 p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <img
+                src="https://images.unsplash.com/photo-1459156212016-c812468e2115?q=80&w=800&auto=format&fit=crop"
+                alt="진단 완료: 몬스테라"
+                className="w-24 h-24 rounded-lg object-cover shadow-md flex-shrink-0"
+              />
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded-full text-xs mb-2">
+                  <Bug className="w-3 h-3" />
+                  <span className="font-medium">병충해 감지</span>
+                </div>
+                <h4 className="font-bold text-lg text-gray-900">잎마름병</h4>
+                <p className="text-xs text-gray-600 italic">Leaf Blight</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-3 mb-2">
+              <div className="space-y-2 text-xs">
+                <div>
+                  <span className="text-gray-500">식물:</span>
+                  <span className="font-medium ml-1">몬스테라</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">감지 신뢰도:</span>
+                  <span className="font-bold text-red-600 ml-1">87.3%</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">심각도:</span>
+                  <span className="font-medium text-orange-600 ml-1">중간</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-2">
+              <p className="text-xs font-semibold text-amber-900 mb-1">🤖 GPT 추천 치료법</p>
+              <p className="text-xs text-amber-800">
+                • 감염된 잎을 제거하고 소각합니다<br />
+                • 통풍을 좋게 하고 과습을 피합니다<br />
+                • 살균제를 7-10일 간격으로 2-3회 살포합니다<br />
+                • 건강한 새 잎이 나올 때까지 비료 주기를 줄입니다
+              </p>
+            </div>
+
+            <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-2">
+              <p className="text-xs text-emerald-800">
+                💡 시연용 데모입니다. 실제 기능은 "진단해줘" 메뉴를 이용하세요.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Button
+          onClick={status === 'success' ? handleReset : handleDiagnose}
+          disabled={status === 'loading'}
+          className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {status === 'idle' && '🔍 진단 시작하기'}
+          {status === 'loading' && (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              진단 중...
+            </>
+          )}
+          {status === 'success' && '🔄 다시 진단하기'}
+        </Button>
+        {status === 'success' && (
+          <Link to="/pest" className="flex-1">
+            <Button variant="outline" className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+              실제 사용하기 →
+            </Button>
+          </Link>
+        )}
+      </div>
+    </>
+  );
+}
+
+// --- 3. '맞춤형 관리법' 팝업 (텍스트 정보) ---
 function CareGuideContent() {
   return (
     <>
@@ -287,7 +415,7 @@ function CareGuideContent() {
   );
 }
 
-// --- 3. '성장 예상 분석' 팝업 (그래프) ---
+// --- 4. '성장 예상 분석' 팝업 (그래프) ---
 function GrowthPredictionContent() {
   // 샘플 성장 데이터
   const sampleData = [
@@ -318,164 +446,6 @@ function GrowthPredictionContent() {
             실제 성장은 물주기, 햇빛, 온도 등의 환경 요인에 따라 달라질 수 있습니다.
           </p>
         </div>
-      </div>
-    </>
-  );
-}
-
-// --- 4. '식물 관리법 AI 챗봇' 팝업 (챗봇 시연) ---
-function CareChatContent() {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      role: 'assistant',
-      content: '안녕하세요! 🌱 AI 식물 관리 상담사입니다.\n식물 관리에 대해 무엇이든 물어보세요!',
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-
-  // 예시 질문
-  const exampleQuestions = [
-    '몬스테라 물주기는 어떻게 하나요?',
-    '잎이 노랗게 변하는 이유는?',
-    '햇빛을 많이 받아야 하는 식물은?',
-  ];
-
-  const handleSendMessage = () => {
-    if (!input.trim() || isTyping) return;
-
-    // 사용자 메시지 추가
-    const userMessage = {
-      id: Date.now(),
-      role: 'user',
-      content: input.trim(),
-    };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsTyping(true);
-
-    // AI 응답 시뮬레이션
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: `"${userMessage.content}"에 대한 답변입니다.\n\n몬스테라의 경우 흙이 마르면 충분히 물을 주세요. 간접광이 좋으며, 18-27°C가 적당합니다. 🌿\n\n더 궁금한 점이 있으시면 언제든 물어보세요!`,
-      };
-      setMessages(prev => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 1000);
-  };
-
-  const handleExampleClick = (question) => {
-    setInput(question);
-  };
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle className="text-2xl flex items-center gap-2">
-          <MessageSquare className="w-6 h-6 text-green-600" />
-          식물 관리법 AI 챗봇
-        </DialogTitle>
-        <DialogDescription>
-          식물 관리에 대한 모든 궁금증을 AI에게 물어보세요
-        </DialogDescription>
-      </DialogHeader>
-      
-      {/* 메시지 영역 */}
-      <div className="max-h-[400px] overflow-y-auto space-y-3 py-4 px-2">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.role === 'assistant' && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-green-600" />
-              </div>
-            )}
-            <div
-              className={`max-w-[75%] rounded-lg p-3 ${
-                message.role === 'user'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-            </div>
-            {message.role === 'user' && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
-              </div>
-            )}
-          </div>
-        ))}
-        {isTyping && (
-          <div className="flex gap-2 justify-start">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="bg-gray-100 rounded-lg p-3">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 예시 질문 (메시지가 1개일 때만) */}
-      {messages.length === 1 && (
-        <div className="space-y-2 pb-4">
-          <p className="text-sm text-gray-600 font-medium">💡 이런 질문을 해보세요:</p>
-          <div className="flex flex-wrap gap-2">
-            {exampleQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => handleExampleClick(question)}
-                className="text-xs px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition"
-              >
-                {question}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 입력 영역 */}
-      <div className="flex gap-2 pt-2 border-t">
-        <Textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
-          placeholder="질문을 입력하세요..."
-          className="flex-1 min-h-[60px] resize-none"
-          disabled={isTyping}
-        />
-        <Button
-          onClick={handleSendMessage}
-          disabled={isTyping || !input.trim()}
-          className="self-end bg-green-600 hover:bg-green-700"
-        >
-          <Send className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* 전체 기능 링크 */}
-      <div className="pt-3 border-t">
-        <Link to="/care">
-          <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50">
-            전체 챗봇 기능 사용하기 →
-          </Button>
-        </Link>
       </div>
     </>
   );

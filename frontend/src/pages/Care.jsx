@@ -2,12 +2,9 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { getCareById } from '../data/careDB';
 import CareTips from '../components/CareTips';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, AlertTriangle, Bug, Shield, TrendingUp, Calendar as CalendarCheck } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Bug } from 'lucide-react';
 
 export default function Care() {
   const { id } = useParams();
@@ -15,7 +12,10 @@ export default function Care() {
   const location = useLocation();
   const { toast } = useToast();
   
+  // 백엔드 데이터가 있으면 우선 사용, 없으면 목업 데이터 사용
   const { identification, careGuide, uploadedImageUrl } = location.state || {};
+
+  // careGuide를 CareTips 컴포넌트 형식으로 변환 (필드명 매핑)
   const care = careGuide ? {
     id,
     name: identification?.plant_name || id,
@@ -36,6 +36,7 @@ export default function Care() {
     diseases: []
   });
 
+  // 병해충 분석 시뮬레이션 (실제로는 백엔드 API 호출)
   function handleDiseaseAnalysis() {
     toast({
       title: '병해충 분석 중...',
@@ -43,6 +44,7 @@ export default function Care() {
       variant: 'default',
     });
 
+    // 목업 데이터 (실제로는 백엔드 응답)
     setTimeout(() => {
       setDiseaseAnalysis({
         isAnalyzed: true,
@@ -151,127 +153,24 @@ export default function Care() {
         {/* 관리법 상세 */}
         <CareTips care={care} />
 
-        {/* 액션 버튼 - 성장도 및 우리아이 */}
-        <div className="flex flex-wrap gap-4">
-          <Button
-            onClick={() => {
-              const plantId = care.name.toLowerCase().replace(/\s+/g, '-');
-              navigate(`/growth/${plantId}`, {
-                state: { identification, careGuide, uploadedImageUrl }
-              });
-            }}
-            className="flex-1 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg"
-          >
-            <TrendingUp className="w-4 h-4 mr-2" />
-            성장도 확인하기
-          </Button>
-          <Button
-            onClick={() => navigate('/mychild')}
-            variant="outline"
-            className="flex-1 border-emerald-500 text-emerald-700 hover:bg-emerald-50 rounded-full"
-          >
-            <CalendarCheck className="w-4 h-4 mr-2" />
-            우리아이에서 관리하기
-          </Button>
-        </div>
-
-        {/* 병해충 진단 */}
-        <section aria-label="병해충 진단">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-emerald-800 flex items-center gap-2">
-              <Bug className="w-6 h-6" aria-hidden="true" />
-              병해충 진단
-            </h2>
-            {!diseaseAnalysis.isAnalyzed && (
-              <Button
-                onClick={handleDiseaseAnalysis}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
-                aria-label="병해충 분석 시작"
-              >
-                <Shield className="w-4 h-4 mr-2" aria-hidden="true" />
-                분석하기
-              </Button>
-            )}
-          </div>
-
-          {!diseaseAnalysis.isAnalyzed ? (
-            <Card className="rounded-xl border-emerald-200 shadow-md">
-              <CardContent className="pt-6 text-center py-12">
-                <Bug className="w-16 h-16 mx-auto mb-4 text-emerald-300" aria-hidden="true" />
-                <p className="text-emerald-700 text-lg mb-2">
-                  AI 병해충 진단을 시작하세요
-                </p>
-                <p className="text-emerald-600 text-sm">
-                  업로드한 식물 이미지를 분석하여 병해충을 탐지합니다.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {diseaseAnalysis.diseases.map((disease, idx) => (
-                <Card 
-                  key={idx} 
-                  className={`rounded-xl shadow-md border-2 ${getSeverityColor(disease.severity)}`}
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5" aria-hidden="true" />
-                        {disease.name}
-                      </CardTitle>
-                      <Badge 
-                        variant="outline" 
-                        className={`${getSeverityColor(disease.severity)} border-2 px-3 py-1`}
-                      >
-                        위험도: {getSeverityLabel(disease.severity)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium">감염 확률</span>
-                        <span className="text-sm font-bold">{disease.probability}%</span>
-                      </div>
-                      <Progress 
-                        value={disease.probability} 
-                        className="h-3"
-                        aria-label={`감염 확률 ${disease.probability}%`}
-                      />
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <span className="text-lg">📋</span>
-                        증상
-                      </h4>
-                      <p className="text-sm">{disease.symptoms}</p>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <span className="text-lg">💊</span>
-                        대처 방법
-                      </h4>
-                      <p className="text-sm">{disease.treatment}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              <Button
-                onClick={handleDiseaseAnalysis}
-                variant="outline"
-                className="w-full border-emerald-500 text-emerald-700 hover:bg-emerald-50 rounded-full"
-                aria-label="병해충 재분석"
-              >
-                <Shield className="w-4 h-4 mr-2" aria-hidden="true" />
-                다시 분석하기
-              </Button>
-            </div>
-          )}
-        </section>
+        {/* 액션 버튼 - 병해충 진단 */}
+        <Button
+          onClick={() => {
+            // 현재 이미지를 병해충 페이지로 전달
+            navigate('/pest', {
+              state: {
+                uploadedImageUrl,
+                plantName: care.name
+              }
+            });
+          }}
+          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg py-6 text-lg font-bold"
+        >
+          <Bug className="w-5 h-5 mr-2" />
+          병해충 진단하기
+        </Button>
       </div>
     </main>
   );
 }
+
