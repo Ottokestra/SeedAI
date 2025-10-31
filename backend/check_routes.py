@@ -14,3 +14,4 @@ if detect_routes:
 else:
     print("  ❌ /api/detect 엔드포인트를 찾을 수 없습니다!")
 
+
