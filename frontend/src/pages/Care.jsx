@@ -15,10 +15,7 @@ export default function Care() {
   const location = useLocation();
   const { toast } = useToast();
   
-  // 백엔드 데이터가 있으면 우선 사용, 없으면 목업 데이터 사용
   const { identification, careGuide, uploadedImageUrl } = location.state || {};
-  
-  // careGuide를 CareTips 컴포넌트 형식으로 변환 (필드명 매핑)
   const care = careGuide ? {
     id,
     name: identification?.plant_name || id,
@@ -39,7 +36,6 @@ export default function Care() {
     diseases: []
   });
 
-  // 병해충 분석 시뮬레이션
   function handleDiseaseAnalysis() {
     toast({
       title: '병해충 분석 중...',

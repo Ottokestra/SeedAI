@@ -253,14 +253,14 @@ export default function Home() {
 
       {/* CTA Strip */}
       <section className="bg-emerald-600 overflow-hidden">
-        <motion.div 
+        <motion.div
           className="max-w-5xl mx-auto px-6 py-10 text-white flex flex-col md:flex-row items-center justify-between gap-4"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <motion.h3 
+          <motion.h3
             className="text-2xl font-semibold"
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}

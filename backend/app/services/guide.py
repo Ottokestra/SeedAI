@@ -46,25 +46,25 @@ def load_text_generator():
 def load_openai_client():
     """OpenAI 클라이언트를 로드합니다."""
     global _openai_client
-    
+
     if _openai_client is None:
         if settings.openai_api_key:
             try:
                 # httpx 클라이언트를 직접 생성하여 proxies 문제 해결
                 import httpx
                 import os
-                
+
                 # 환경 변수에서 proxies 완전히 제거
                 proxy_env_vars = ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'ALL_PROXY', 'all_proxy']
                 saved_proxies = {}
                 for var in proxy_env_vars:
                     if var in os.environ:
                         saved_proxies[var] = os.environ.pop(var)
-                
+
                 try:
                     # httpx 클라이언트를 proxies 관련 설정 없이 생성
                     http_client = httpx.Client(timeout=60.0)
-                    
+
                     _openai_client = OpenAI(
                         api_key=settings.openai_api_key,
                         http_client=http_client
@@ -74,7 +74,7 @@ def load_openai_client():
                     # 환경 변수 복원
                     for var, value in saved_proxies.items():
                         os.environ[var] = value
-                
+
                 return _openai_client
             except Exception as e:
                 print(f"[OpenAI 클라이언트 로딩 실패] {e}")
@@ -83,17 +83,17 @@ def load_openai_client():
                 _openai_client = None
         else:
             print("[경고] OpenAI API 키가 설정되지 않았습니다. .env 파일에 OPENAI_API_KEY를 설정해주세요.")
-    
+
     return _openai_client
 
 
 def generate_care_guide_with_gpt(plant_name: str) -> Optional[dict]:
     """
     GPT-4o-mini를 사용하여 직접 식물 관리 가이드를 생성합니다.
-    
+
     Args:
         plant_name: 식물 종명
-        
+
     Returns:
         dict: 한국 기준 관리 가이드 (JSON 형식)
     """
@@ -102,9 +102,9 @@ def generate_care_guide_with_gpt(plant_name: str) -> Optional[dict]:
         if client is None:
             print(f"[GPT 직접 생성 실패] OpenAI 클라이언트가 없습니다.")
             return None
-        
+
         print(f"[GPT API 호출 시작] 식물명: {plant_name}")
-        
+
         prompt = f"""식물명: {plant_name}
 
 '{plant_name}'의 고유한 특성과 원산지를 고려한 실내 화분 재배 관리 가이드를 제공해주세요.
@@ -130,7 +130,7 @@ def generate_care_guide_with_gpt(plant_name: str) -> Optional[dict]:
   "soil": "토양 정보",
   "tips": ["팁1", "팁2", "팁3", "팁4", "팁5"]
 }}"""
-        
+
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -140,21 +140,21 @@ def generate_care_guide_with_gpt(plant_name: str) -> Optional[dict]:
             temperature=0.7,
             max_tokens=1000
         )
-        
+
         content = response.choices[0].message.content.strip()
         print(f"[GPT API 응답] {plant_name}: {content[:200]}...")
-        
+
         # JSON 추출 (code block 제거)
         json_match = re.search(r'\{[\s\S]*\}', content)
         if json_match:
             json_str = json_match.group(0)
         else:
             json_str = content
-        
+
         care_data = json.loads(json_str)
         print(f"[GPT 파싱 성공] {plant_name}")
         return care_data
-    
+
     except Exception as e:
         print(f"[GPT 직접 생성 오류] {plant_name}: {e}")
         import traceback
@@ -165,7 +165,7 @@ def generate_care_guide_with_gpt(plant_name: str) -> Optional[dict]:
 def generate_care_guide(plant_name: str) -> CareGuide:
     """
     GPT-4o-mini를 사용하여 식물 관리 가이드를 생성합니다.
-    
+
     Args:
         plant_name: 식물 종명
         
@@ -173,10 +173,10 @@ def generate_care_guide(plant_name: str) -> CareGuide:
         CareGuide: 식물 관리 가이드
     """
     print(f"[가이드 생성 시작] 식물명: {plant_name}")
-    
+
     # GPT-4o-mini로 직접 생성
     korean_guide = generate_care_guide_with_gpt(plant_name)
-    
+
     if korean_guide:
         print(f"[GPT 직접 생성 성공] {plant_name}: {korean_guide}")
         try:
@@ -195,7 +195,7 @@ def generate_care_guide(plant_name: str) -> CareGuide:
             print(f"[GPT 직접 생성 CareGuide 변환 오류] {e}")
             import traceback
             traceback.print_exc()
-    
+
     # 최종 fallback: 기본 가이드 반환
     print(f"[경고] AI 생성 실패, 기본 가이드 사용: {plant_name}")
     return get_default_care_guide(plant_name)

@@ -10,6 +10,7 @@ from app.models.schemas import PlantIdentification
 # 전역 변수로 모델 캐싱
 _classifier_model = None
 _processor = None
+_translator = None
 _translation_cache = {}
 
 
@@ -108,16 +109,19 @@ def classify_plant(image: bytes) -> PlantIdentification:
         if results:
             top_result = results[0]
             plant_name_en = format_plant_name(top_result["label"])
+            plant_name = format_plant_name(top_result["label"])
             confidence = top_result["score"]
             common_names_en = [format_plant_name(r["label"]) for r in results[:3]]
-            
+
             # GPT-4o-mini로 식물 이름 번역
             plant_name = translate_to_korean(plant_name_en)
             common_names = [translate_to_korean(name) for name in common_names_en]
-            
+            common_names = [format_plant_name(r["label"]) for r in results[:3]]
+
             return PlantIdentification(
                 plant_name=plant_name,
                 scientific_name=plant_name_en,  # 영어 이름을 scientific_name으로 저장
+                scientific_name=None,
                 confidence=confidence,
                 common_names=common_names
             )
@@ -150,10 +154,10 @@ def get_default_identification() -> PlantIdentification:
 def translate_to_korean(text: str) -> str:
     """
     GPT-4o-mini를 사용하여 영어 식물 이름을 한국어로 번역합니다.
-    
+
     Args:
         text: 영어 식물 이름
-        
+
     Returns:
         str: 한국어 번역 결과
     """
@@ -166,7 +170,7 @@ def translate_to_korean(text: str) -> str:
     try:
         # OpenAI 클라이언트 import
         from app.services.guide import load_openai_client
-        
+
         client = load_openai_client()
         if client is None:
             print(f"[번역 실패] OpenAI 클라이언트 없음: {text}")
@@ -190,11 +194,11 @@ def translate_to_korean(text: str) -> str:
         )
         
         translated = response.choices[0].message.content.strip()
-        
+
         # 캐시에 저장
         _translation_cache[text] = translated
         print(f"[GPT 번역] {text} → {translated}")
-        
+
         return translated
         
     except Exception as e:
@@ -219,11 +223,11 @@ def classify_plant_with_plantrecog(image: bytes) -> PlantIdentification:
                     plant_name_en = format_plant_name(top_prediction["name"])
                     confidence = top_prediction["score"]
                     common_names_en = [format_plant_name(p["name"]) for p in predictions[1:4]]
-                    
+
                     # GPT-4o-mini로 식물 이름 번역
                     plant_name = translate_to_korean(plant_name_en)
                     common_names = [translate_to_korean(name) for name in common_names_en]
-                    
+
                     return PlantIdentification(
                         plant_name=plant_name,
                         scientific_name=plant_name_en,  # 영어 이름을 scientific_name으로 저장

@@ -5,19 +5,22 @@ import Shell from './layouts/Shell';
 import Home from './pages/Home';
 import Status from './pages/Status';
 import Identify from './pages/Identify';
-import CareDetail from './pages/Care';
+import Care from './pages/Care';
 import CareChat from './pages/CareChat';
-import GrowthDetail from './pages/Growth';
+import Growth from './pages/Growth';
 import GrowthStandalone from './pages/GrowthStandalone';
 import MyChild from './pages/MyChild';
 import ProgramGuide from './pages/ProgramGuide';
-
-// 새로 추가
 import PlantDetect from './pages/PlantDetect';
 
 function App() {
     return (
-        <BrowserRouter>
+        <BrowserRouter
+            future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+            }}
+        >
             <ScrollToTop />
             <Routes>
                 <Route element={<Shell />}>
@@ -26,12 +29,10 @@ function App() {
                     <Route path="/status" element={<Status />} />
                     <Route path="/identify" element={<Identify />} />
                     <Route path="/care" element={<CareChat />} />
-                    <Route path="/care/:id" element={<CareDetail />} />
+                    <Route path="/care/:id" element={<Care />} />
                     <Route path="/growth" element={<GrowthStandalone />} />
-                    <Route path="/growth/:id" element={<GrowthDetail />} />
+                    <Route path="/growth/:id" element={<Growth />} />
                     <Route path="/mychild" element={<MyChild />} />
-
-                    {/* 식물 진단(기존 App 2) 라우트 */}
                     <Route path="/detect" element={<PlantDetect />} />
                 </Route>
             </Routes>

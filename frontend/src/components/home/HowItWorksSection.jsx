@@ -43,8 +43,8 @@ export function HowItWorksSection() {
 
   const cardVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.6 }
     }
@@ -53,7 +53,7 @@ export function HowItWorksSection() {
   return (
     <section id="how-it-works" className="bg-green-50/50 py-16 sm:py-24">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div 
+        <motion.div
           className="text-center"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -72,7 +72,7 @@ export function HowItWorksSection() {
         </motion.div>
 
         {/* 4단계 카드 그리드 */}
-        <motion.div 
+        <motion.div
           className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
           initial="hidden"

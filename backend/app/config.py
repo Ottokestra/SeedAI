@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # Hugging Face 모델 설정
     plant_classifier_model: str = "umutbozdag/plant-identity"  # 식물 전문 모델 (20종)
     text_generation_model: str = "gpt2"  # 경량 공개 모델
+    text_generation_model: str = "skt/kogpt2-base-v2"  # 한국어 최적화 모델 (GPT-2 대신 사용)
     image_generation_model: str = "stabilityai/sd-turbo"
     
     # 선택적 Hugging Face 토큰 (rate limit 완화용)
@@ -31,12 +32,12 @@ class Settings(BaseSettings):
 
     # OpenAI API 설정
     openai_api_key: Optional[str] = None
-    
+
     # PLLaMa 모델 설정 (Hugging Face 모델명)
     # PLLaMa는 GitHub에서 확인 필요: https://github.com/Xianjun-Yang/PLLaMa
     # 일단 기본 LLaMA 모델 사용, 나중에 PLLaMa 모델명으로 변경 가능
     pllama_model: str = "meta-llama/Llama-2-7b-chat-hf"  # PLLaMa 모델명으로 변경 필요
-    
+
 
     # 캐시 디렉토리
     cache_dir: str = "./model_cache"
