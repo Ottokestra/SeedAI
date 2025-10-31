@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { Loader2, Upload, X, RefreshCw, Camera, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import React, { useRef } from "react";
+
 
 export default function Identify() {
   const { toast } = useToast();
