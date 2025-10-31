@@ -51,10 +51,13 @@
 ### 프론트엔드
 - **React 18**: UI 라이브러리
 - **Vite**: 빌드 도구
-- **React Router**: 라우팅
+- **React Router DOM**: 라우팅 (NavLink, useNavigate, useLocation 활용)
 - **Axios**: HTTP 클라이언트
-- **TailwindCSS**: 스타일링
-- **React Icons**: 아이콘
+- **TailwindCSS**: 스타일링 + shadcn/ui 컴포넌트
+- **Framer Motion**: 애니메이션
+- **Lucide React**: 아이콘 라이브러리
+- **Recharts**: 그래프 시각화
+- **WebRTC API**: 웹캠 촬영 기능
 
 ### AI 모델
 - **식물 식별 (멀티 모델)**:
@@ -162,44 +165,104 @@ npm run dev
 
 ## 🚀 사용 방법
 
-### 기본 사용 (PC/모바일)
+### 📱 페이지 구조 및 기능
 
-1. 웹 브라우저에서 `http://localhost:5173` 접속 (PC)
-   - 또는 모바일: `http://[PC의 IP]:5173` (예: `http://192.168.0.123:5173`)
-2. "지금 시작하기" 버튼 클릭
-3. 식물 사진 업로드 (드래그 앤 드롭 또는 파일 선택)
-   - **모바일**: 📷 카메라로 바로 촬영 가능!
-4. "분석 시작하기" 버튼 클릭
-5. AI 분석 결과 확인
-   - 식물 종 정보
-   - 상세 관리 가이드
-   - 성장 예측 타임라인
+#### 1️⃣ **메인 페이지** (`/`)
+- **Hero 섹션**: 서비스 소개 및 시작하기 버튼
+- **Why 새싹아이?**: 서비스 필요성 설명
+- **주요 기능**: 4가지 핵심 기능 카드 (클릭 시 시연 팝업)
+  - 🔍 식물 종 식별 및 분류
+  - 📖 맞춤형 관리법 제공
+  - 📈 성장 예상 분석
+  - 💬 식물 관리법 AI 챗봇
+- **사용 방법**: 4단계 프로세스 소개
+- **식물 케어란?**: 서비스 철학
 
-### 🧪 모델 테스트 페이지 (개발자용)
+#### 2️⃣ **새싹아이란?** (`/guide`)
+- 서비스 소개 및 사용 가이드
+- 주요 기능 상세 설명
+- 시작하기 안내
 
-**URL**: `/test`
+#### 3️⃣ **식별 페이지** (`/identify`)
+- **이미지 업로드**:
+  - 드래그 앤 드롭 지원
+  - 파일 선택 (갤러리)
+  - **📷 웹캠 촬영 기능** (라이브 피드 모달)
+- **AI 분석**:
+  - 실시간 로딩 애니메이션
+  - 식물 종 식별 결과
+  - 신뢰도 표시
+- **다음 단계**:
+  - 관리법 보기 버튼
+  - 성장도 보기 버튼
 
-두 가지 AI 모델을 비교하고 테스트할 수 있는 전용 페이지:
+#### 4️⃣ **관리법 페이지**
+- **독립 접근** (`/care`): 챗봇 형식으로 관리법 질문/답변
+- **식별 후** (`/care/:id`): 식별된 식물의 상세 관리법
+  - 물주기, 햇빛, 온도, 습도, 비료 정보
+  - 병충해 진단 (임시 데이터)
+  - 관리 팁 제공
+  - 성장도/우리아이로 연결
 
-1. **자동 선택 분석 (권장)** ⚡
-   - 모델1(ViT) 신뢰도 ≥ 50% → 모델1 결과 사용
-   - 모델1 신뢰도 < 50% → 모델2(PlantRecog) 결과 사용
-   - 한국어 자동 번역 지원
+#### 5️⃣ **성장도 페이지**
+- **독립 접근** (`/growth`): 식물 종을 먼저 선택
+- **식별 후** (`/growth/:id`): 해당 식물의 성장 예측
+  - 잘 키웠을 때 vs 못 키웠을 때 비교 그래프
+  - 월별 성장 데이터 시각화
+  - 관리 팁 및 주의사항
+  - 우리아이로 연결
 
-2. **두 모델 비교** 🔬
-   - 모델1(Google ViT): 20종 식물 전문 인식
-   - 모델2(PlantRecog): 299종 꽃 인식
-   - 신뢰도 막대 그래프로 비교
-   - 한국어 자동 번역 지원
+#### 6️⃣ **우리아이 페이지** (`/mychild`)
+- 내 식물 목록 관리
+- 개별 식물 관리 기록
+- 물주기/비료 일정 관리
+- 사진 업로드 및 성장 기록
+- PDF/CSV 내보내기
 
-3. **이미지 입력 방식**
-   - 📁 파일 업로드 (PC/모바일)
-   - 📷 카메라 촬영 (모바일 권장)
+### 🎯 주요 사용 시나리오
+
+#### 시나리오 1: 식물 종 식별부터 시작
+```
+메인 페이지 → 식별 → 관리법 → 성장도 → 우리아이
+```
+1. "내 식물 종 식별하고 케어 시작하기" 클릭
+2. 식물 사진 업로드 또는 촬영
+3. AI 분석 결과 확인
+4. 관리법 확인
+5. 성장도 그래프 확인
+6. 우리아이에 등록하여 지속 관리
+
+#### 시나리오 2: 관리법만 빠르게 확인
+```
+헤더 메뉴 → 관리법 → 챗봇으로 질문
+```
+1. 헤더에서 "관리법" 클릭
+2. AI 챗봇에게 식물 관리 질문
+3. 즉시 답변 확인
+
+#### 시나리오 3: 내 식물 관리 기록
+```
+헤더 메뉴 → 우리아이 → 식물 추가/관리
+```
+1. 헤더에서 "우리아이" 클릭
+2. 새 식물 추가
+3. 물주기/비료 일정 입력
+4. 성장 사진 업로드
+5. 기록 내보내기 (PDF/CSV)
+
+### 🎨 UI/UX 특징
+
+- **Framer Motion 애니메이션**: 부드러운 페이지 전환 및 요소 등장
+- **반응형 디자인**: 모바일/태블릿/데스크톱 최적화
+- **다크 모드 대응**: TailwindCSS 기반 테마
+- **shadcn/ui 컴포넌트**: 일관된 디자인 시스템
+- **로컬 스토리지 연동**: 페이지 간 데이터 유지
+- **실시간 피드백**: 로딩 상태, 에러 메시지, 성공 알림
 
 ## 📁 프로젝트 구조
 
 ```
-plant-ai-web/
+proj1/
 ├── backend/                    # FastAPI 백엔드
 │   ├── app/
 │   │   ├── main.py            # 앱 진입점
@@ -219,22 +282,53 @@ plant-ai-web/
 ├── frontend/                   # React 프론트엔드
 │   ├── src/
 │   │   ├── main.jsx           # 진입점
-│   │   ├── App.jsx            # 메인 앱
+│   │   ├── App.jsx            # 라우팅 설정
+│   │   │
+│   │   ├── layouts/           # 레이아웃
+│   │   │   └── Shell.jsx      # 공통 헤더/푸터 레이아웃
+│   │   │
 │   │   ├── pages/             # 페이지 컴포넌트
-│   │   │   ├── Home.jsx       # 홈 페이지
-│   │   │   ├── PlantAnalysis.jsx  # 식물 분석 페이지
-│   │   │   ├── Result.jsx     # 결과 페이지
-│   │   │   └── ModelTest.jsx  # 모델 비교 테스트 페이지 (신규)
+│   │   │   ├── Home.jsx       # 메인 홈 페이지
+│   │   │   ├── ProgramGuide.jsx   # 새싹아이란? (프로그램 소개)
+│   │   │   ├── Identify.jsx       # 식물 종 식별 (이미지 업로드 + 웹캠 촬영)
+│   │   │   ├── CareChat.jsx       # 관리법 챗봇 (독립 접근)
+│   │   │   ├── Care.jsx           # 관리법 상세 (식별 후)
+│   │   │   ├── GrowthStandalone.jsx # 성장도 (독립 접근)
+│   │   │   ├── Growth.jsx         # 성장도 상세 (식별 후)
+│   │   │   └── MyChild.jsx        # 우리아이 (식물 관리 기록)
+│   │   │
 │   │   ├── components/        # 재사용 컴포넌트
-│   │   │   ├── ImageUpload.jsx    # 이미지 업로드
-│   │   │   ├── CameraCapture.jsx  # 카메라 촬영 (신규)
-│   │   │   ├── PlantInfo.jsx      # 식물 정보
-│   │   │   ├── CareGuide.jsx      # 관리 가이드
-│   │   │   └── GrowthPreview.jsx  # 성장 예측
-│   │   ├── services/          # API 서비스
-│   │   └── styles/            # 스타일
+│   │   │   ├── home/
+│   │   │   │   ├── FeaturesSection.jsx   # 주요 기능 카드 + 시연 팝업
+│   │   │   │   ├── HowItWorksSection.jsx # 사용 방법 4단계
+│   │   │   │   └── GrowthChart.jsx       # 성장도 그래프
+│   │   │   ├── ui/            # shadcn/ui 컴포넌트
+│   │   │   │   ├── button.jsx
+│   │   │   │   ├── card.jsx
+│   │   │   │   ├── dialog.jsx
+│   │   │   │   ├── input.jsx
+│   │   │   │   ├── textarea.jsx
+│   │   │   │   ├── badge.jsx
+│   │   │   │   ├── select.jsx
+│   │   │   │   ├── progress.jsx
+│   │   │   │   └── ... (기타 UI 컴포넌트)
+│   │   │   └── ScrollToTop.jsx  # 페이지 전환 시 스크롤 초기화
+│   │   │
+│   │   ├── hooks/             # 커스텀 훅
+│   │   │   └── usePersistedState.js  # 로컬 스토리지 연동 상태 관리
+│   │   │
+│   │   ├── lib/
+│   │   │   └── utils.js       # 유틸리티 함수
+│   │   │
+│   │   └── styles/
+│   │       └── globals.css    # 전역 스타일
+│   │
+│   ├── public/
+│   │   ├── mockServiceWorker.js  # Mock Service Worker
+│   │   └── images/           # 이미지 자산
 │   ├── package.json
-│   └── vite.config.js
+│   ├── vite.config.js
+│   └── tailwind.config.js
 │
 └── README.md
 ```
@@ -342,24 +436,55 @@ PlantRecog 모델로 식물 이미지를 분석합니다 (299종 꽃 인식).
 ### `GET /docs`
 FastAPI 자동 생성 문서 (Swagger UI)
 
-## 🔄 주요 변경 사항 (v2.0)
+## 🔄 주요 변경 사항
 
-### ✅ API 토큰 불필요
+### 🎉 v3.0 - 프론트엔드 전면 개편 (2025.10.31)
+
+#### ✨ 새로운 기능
+- **📷 웹캠 촬영**: 라이브 피드 모달로 실시간 식물 촬영
+- **🎭 시연 팝업**: 백엔드 연동 없이 기능 체험 가능
+- **💬 AI 챗봇**: 식물 관리법 실시간 질의응답
+- **📊 성장도 그래프**: Recharts 기반 비교 차트
+- **📝 우리아이**: 식물 관리 기록 및 일정 관리
+- **🌈 Framer Motion**: 부드러운 애니메이션 효과
+
+#### 🏗️ 구조 개선
+- **레이아웃 시스템**: Shell.jsx 기반 공통 헤더/푸터
+- **라우팅 재설계**: 독립 페이지 + 상세 페이지 분리
+  - `/care` (챗봇) vs `/care/:id` (상세)
+  - `/growth` (독립) vs `/growth/:id` (상세)
+- **상태 관리**: usePersistedState 훅으로 로컬 스토리지 연동
+- **컴포넌트 모듈화**: FeaturesSection, HowItWorksSection 분리
+
+#### 🎨 디자인 시스템
+- **shadcn/ui**: 일관된 컴포넌트 라이브러리
+- **TailwindCSS**: 유틸리티 우선 스타일링
+- **Lucide React**: 통일된 아이콘 세트
+- **반응형 디자인**: 모바일 우선 접근
+
+#### 🚀 성능 최적화
+- **코드 스플리팅**: 페이지별 동적 로딩
+- **이미지 최적화**: Unsplash CDN 활용
+- **메모이제이션**: React.memo 및 useMemo 활용
+
+### ✅ v2.0 - 백엔드 개선
+
+#### API 토큰 불필요
 - **이전**: Hugging Face API 토큰 필수
 - **현재**: 토큰 없이 바로 사용 가능
 - Transformers 라이브러리를 직접 import하여 로컬에서 모델 실행
 
-### ✅ 로컬 모델 실행
+#### 로컬 모델 실행
 - 모델이 `model_cache/` 디렉토리에 자동 다운로드
 - 첫 실행 후에는 캐시된 모델 재사용
 - 인터넷 연결 필요 (첫 다운로드 시에만)
 
-### ✅ 개선된 성능
+#### 개선된 성능
 - 모델을 메모리에 캐싱하여 빠른 추론
 - GPU 자동 감지 및 사용
 - 효율적인 배치 처리
 
-### ✅ 의존성 추가
+#### 의존성
 ```
 transformers==4.36.2
 torch==2.1.2
@@ -445,8 +570,61 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
 문제가 발생하거나 질문이 있으시면 이슈를 등록해주세요.
 
+## 🔧 프론트엔드 주요 기술 구현
+
+### 웹캠 촬영 기능 (`Identify.jsx`)
+```javascript
+// WebRTC API 사용
+const stream = await navigator.mediaDevices.getUserMedia({ 
+  video: { facingMode: 'environment' } 
+});
+videoRef.current.srcObject = stream;
+
+// Canvas로 캡처
+const canvas = canvasRef.current;
+const context = canvas.getContext('2d');
+context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+canvas.toBlob(blob => {
+  const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+  setSelectedFile(file);
+});
+```
+
+### 로컬 스토리지 상태 관리 (`usePersistedState.js`)
+```javascript
+// 페이지 간 데이터 유지
+const [identification, setIdentification] = usePersistedState('plantIdentification', null);
+const [careGuide, setCareGuide] = usePersistedState('plantCareGuide', null);
+const [uploadedImageUrl, setUploadedImageUrl] = usePersistedState('uploadedImageUrl', null);
+```
+
+### 시연 팝업 (`FeaturesSection.jsx`)
+- 백엔드 없이 동작하는 데모
+- 3초 시뮬레이션 후 결과 표시
+- 실제 기능으로 연결 버튼 제공
+
+### 애니메이션 (`Framer Motion`)
+```javascript
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6 }}
+>
+  {/* 컨텐츠 */}
+</motion.div>
+```
+
+## 📱 모바일 최적화
+
+- **터치 제스처**: 드래그 앤 드롭 지원
+- **반응형 그리드**: 모바일/태블릿/데스크톱 레이아웃 자동 전환
+- **웹캠 접근**: 후면 카메라 우선 사용 (`facingMode: 'environment'`)
+- **네트워크 주소**: 같은 Wi-Fi에서 모바일 접속 가능
+
 ---
 
 **새싹아이**와 함께 반려식물을 더 건강하게 키워보세요! 🌿
 
-**v2.0 업데이트**: 이제 API 토큰 없이도 바로 사용할 수 있습니다! 🎉
+**v3.0 업데이트**: 완전히 새로워진 UI/UX와 웹캠 촬영 기능! 🎉  
+**v2.0 업데이트**: 이제 API 토큰 없이도 바로 사용할 수 있습니다! 🔥

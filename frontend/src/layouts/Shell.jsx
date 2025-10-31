@@ -22,12 +22,36 @@ export default function Shell() {
           {/* 네비게이션 메뉴 */}
           <nav className="flex gap-4 text-sm font-medium">
             <NavLink 
+              to="/guide" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              새싹아이란?
+            </NavLink>
+            <NavLink 
               to="/identify" 
               className={({ isActive }) => 
                 `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
               }
             >
-              종 식별
+              식별
+            </NavLink>
+            <NavLink 
+              to="/care" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              관리법
+            </NavLink>
+            <NavLink 
+              to="/growth" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              성장도
             </NavLink>
             <NavLink 
               to="/mychild" 
