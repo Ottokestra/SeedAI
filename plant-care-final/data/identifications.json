@@ -1,0 +1,17 @@
+{
+  "장미_20251031181026": {
+    "id": "장미_20251031181026",
+    "timestamp": "2025-10-31T18:10:26.008750",
+    "file_hash": "4b5d5c8434a94c46262a418565f3a4aa",
+    "identification": {
+      "plant_name": "장미",
+      "scientific_name": "Roses",
+      "confidence": 0.9390168190002441,
+      "common_names": [
+        "티아로즈",
+        "선인장 장미",
+        "카네이션"
+      ]
+    }
+  }
+}

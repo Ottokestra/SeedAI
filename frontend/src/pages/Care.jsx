@@ -5,6 +5,7 @@ import CareTips from '../components/CareTips';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Bug } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Care() {
   const { id } = useParams();
