@@ -245,11 +245,24 @@ export default function Identify() {
       
     } catch (error) {
       console.error('Identify error:', error);
-      const errorMsg = error.response?.data?.detail || '네트워크 오류가 발생했습니다.';
+      
+      let errorTitle = '식별 실패';
+      let errorMsg = '알 수 없는 오류가 발생했습니다.';
+      
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        errorTitle = '백엔드 서버 연결 실패';
+        errorMsg = '백엔드 서버가 실행 중인지 확인해주세요. (http://localhost:8000)\n\n터미널에서 다음 명령어를 실행하세요:\ncd backend && uvicorn app.main:app --reload --port 8000';
+      } else if (error.response) {
+        errorMsg = error.response.data?.detail || `서버 오류 (${error.response.status})`;
+      } else if (error.request) {
+        errorMsg = '서버로부터 응답이 없습니다. 네트워크 연결을 확인해주세요.';
+      }
+      
       toast({
-        title: '식별 실패',
+        title: errorTitle,
         description: errorMsg,
         variant: 'destructive',
+        duration: 8000, // 8초 동안 표시
       });
     } finally {
       setLoading(false);

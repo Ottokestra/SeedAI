@@ -46,6 +46,14 @@ export default function Shell() {
               관리법
             </NavLink>
             <NavLink 
+              to="/pest" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              병충해
+            </NavLink>
+            <NavLink 
               to="/growth" 
               className={({ isActive }) => 
                 `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`

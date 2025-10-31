@@ -7,6 +7,7 @@ import Status from './pages/Status';
 import Identify from './pages/Identify';
 import CareDetail from './pages/Care';
 import CareChat from './pages/CareChat';
+import PestDisease from './pages/PestDisease';
 import GrowthDetail from './pages/Growth';
 import GrowthStandalone from './pages/GrowthStandalone';
 import MyChild from './pages/MyChild';
@@ -24,6 +25,7 @@ function App() {
           <Route path="/identify" element={<Identify />} />
           <Route path="/care" element={<CareChat />} />
           <Route path="/care/:id" element={<CareDetail />} />
+          <Route path="/pest" element={<PestDisease />} />
           <Route path="/growth" element={<GrowthStandalone />} />
           <Route path="/growth/:id" element={<GrowthDetail />} />
           <Route path="/mychild" element={<MyChild />} />
