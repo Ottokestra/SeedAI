@@ -30,7 +30,7 @@ export default function Growth() {
   
   // 임시 성장 데이터 생성 함수
   const createTempGrowthData = (plantName, plantId) => {
-    const baseGrowthRate = 3.5; // 기본 성장률 cm/월
+    const baseGrowthRate = 3.5;
     const data = [];
     for (let i = 1; i <= 12; i++) {
       const height = Math.round((15 + (i - 1) * baseGrowthRate) * 10) / 10;
@@ -130,18 +130,13 @@ export default function Growth() {
     }
   }
 
-  // growthData는 항상 존재 (임시 데이터라도 생성됨)
-
   return (
-    <main className="w-full py-12 px-4">
+    <main className="w-full min-h-[calc(100vh-73px)] bg-emerald-50 py-12 px-4">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* 상단 헤더 + 드롭다운 */}
         <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-emerald-800 mb-2 flex items-center gap-2">
-              <TrendingUp className="w-8 h-8 text-emerald-500" aria-hidden="true" />
-              성장 예측
-            </h1>
+            <h1 className="text-4xl font-bold text-emerald-800 mb-2">🌿 예측해줘</h1>
             <p className="text-lg text-emerald-700">
               {growthData?.name || '식물'}의 12개월 성장 예측 데이터입니다.
             </p>
@@ -172,12 +167,12 @@ export default function Growth() {
         </header>
 
         {/* PDF 출력 대상 영역 */}
-        <div ref={reportRef} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg">
+        <div ref={reportRef} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg border-emerald-200">
           {/* 요약 정보 */}
           <section aria-label="성장 요약">
-            <Card className="rounded-xl border-emerald-200">
+            <Card className="rounded-xl border-emerald-200 bg-white">
               <CardHeader>
-                <CardTitle className="text-emerald-800">성장 요약</CardTitle>
+                <CardTitle className="text-emerald-800 text-xl">예측 요약</CardTitle>
               </CardHeader>
               <CardContent className="grid md:grid-cols-3 gap-4">
                 <div className="text-center">
@@ -280,4 +275,3 @@ export default function Growth() {
     </main>
   );
 }
-

@@ -15,7 +15,7 @@ export default function Shell() {
             />
             <div className="leading-tight">
               <div className="font-semibold text-lg text-gray-800" style={{ letterSpacing: '0.02em' }}>새싹 아이</div>
-              <div className="text-[10px] tracking-[0.25em] text-gray-500 font-light">PLANT-AI</div>
+              <div className="text-[10px] tracking-[0.25em] text-gray-500 font-light">SEED-AI</div>
             </div>
           </Link>
           
@@ -29,38 +29,7 @@ export default function Shell() {
             >
               새싹아이란?
             </NavLink>
-            <NavLink 
-              to="/identify" 
-              className={({ isActive }) => 
-                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
-              }
-            >
-              식별
-            </NavLink>
-            <NavLink 
-              to="/care" 
-              className={({ isActive }) => 
-                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
-              }
-            >
-              관리법
-            </NavLink>
-            <NavLink 
-              to="/pest" 
-              className={({ isActive }) => 
-                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
-              }
-            >
-              병충해
-            </NavLink>
-            <NavLink 
-              to="/growth" 
-              className={({ isActive }) => 
-                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
-              }
-            >
-              성장도
-            </NavLink>
+
             <NavLink 
               to="/mychild" 
               className={({ isActive }) => 
@@ -68,6 +37,42 @@ export default function Shell() {
               }
             >
               우리아이
+            </NavLink>
+
+            <NavLink 
+              to="/identify" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              찾아줘
+            </NavLink>
+
+            <NavLink 
+              to="/care" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              관리해줘
+            </NavLink>
+
+            <NavLink 
+              to="/growth" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              예측해줘
+            </NavLink>
+
+            <NavLink 
+              to="/detect" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              진단해줘
             </NavLink>
           </nav>
         </div>

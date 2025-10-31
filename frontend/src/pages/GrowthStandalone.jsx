@@ -99,6 +99,9 @@ export default function GrowthStandalone() {
 
   const growthData = generateGrowthData();
 
+  // 드래그 앤 드롭 상태
+  const [dragActive, setDragActive] = useState(false);
+
   // 종식별 - 파일 처리
   const processIdentifyFile = (f) => {
     if (!f) return;
@@ -116,6 +119,36 @@ export default function GrowthStandalone() {
     const previewUrl = URL.createObjectURL(f);
     setIdentifyPreview(previewUrl);
     setIdentifyResult(null);
+  };
+
+  // 드래그 앤 드롭 핸들러
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processIdentifyFile(e.dataTransfer.files[0]);
+    }
   };
 
   // 종식별 실행
@@ -158,22 +191,10 @@ export default function GrowthStandalone() {
       }
     } catch (error) {
       console.error('Identify error:', error);
-      
-      let errorTitle = '식별 실패';
-      let errorMsg = '알 수 없는 오류가 발생했습니다.';
-      
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        errorTitle = '백엔드 서버 연결 실패';
-        errorMsg = '백엔드 서버가 실행 중인지 확인해주세요. BACKEND_START_GUIDE.md 파일을 참고하세요.';
-      } else if (error.response) {
-        errorMsg = error.response.data?.detail || `서버 오류 (${error.response.status})`;
-      }
-      
       toast({
-        title: errorTitle,
-        description: errorMsg,
+        title: '식별 실패',
+        description: '네트워크 오류가 발생했습니다.',
         variant: 'destructive',
-        duration: 8000,
       });
     } finally {
       setIdentifyLoading(false);
@@ -207,17 +228,14 @@ export default function GrowthStandalone() {
       <div className="max-w-5xl mx-auto space-y-6">
         {/* 헤더 */}
         <motion.header 
-          className="text-center"
+          className="text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center justify-center gap-2">
-            <TrendingUp className="w-8 h-8 text-emerald-500" />
-            식물 성장도
-          </h1>
-          <p className="text-lg text-emerald-600">
-            식물을 식별하고 성장 예측 그래프를 확인하세요
+          <h1 className="text-4xl font-bold text-emerald-800 mb-3">🌿 예측해줘</h1>
+          <p className="text-lg text-emerald-700">
+            식물을 식별하고 12개월 성장 예측을 확인하세요
           </p>
         </motion.header>
 
@@ -228,15 +246,15 @@ export default function GrowthStandalone() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="rounded-2xl shadow-lg border-emerald-200">
+            <Card className="rounded-2xl shadow-lg border-emerald-200 bg-white">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-emerald-800">현재 식별된 식물</CardTitle>
+                  <CardTitle className="text-emerald-800 text-xl">현재 식별된 식물</CardTitle>
                   <Button
                     onClick={handleReIdentify}
                     variant="outline"
                     size="sm"
-                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg"
+                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-500 rounded-lg transition-all"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     다시 식별하기
@@ -271,138 +289,177 @@ export default function GrowthStandalone() {
         {/* 종식별 UI */}
         {showIdentify && (
           <motion.div
+            className="space-y-6"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="rounded-2xl shadow-lg border-emerald-200">
-              <CardHeader>
-                <CardTitle className="text-emerald-800">식물 종 식별</CardTitle>
-                <p className="text-sm text-emerald-600">
-                  먼저 식물을 식별해주세요
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {!identifyPreview ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => processIdentifyFile(e.target.files?.[0])}
-                          className="hidden"
-                          id="gallery-upload-growth"
-                        />
-                        <label
-                          htmlFor="gallery-upload-growth"
-                          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition h-40"
-                        >
-                          <ImageIcon className="w-12 h-12 text-emerald-500 mb-2" />
-                          <span className="text-sm font-medium text-emerald-700">
-                            갤러리에서 선택
-                          </span>
-                        </label>
-                      </div>
-
-                      <div>
-                        <input
-                          ref={cameraInputRef}
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={(e) => processIdentifyFile(e.target.files?.[0])}
-                          className="hidden"
-                          id="camera-upload-growth"
-                        />
-                        <label
-                          htmlFor="camera-upload-growth"
-                          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition h-40"
-                        >
-                          <Camera className="w-12 h-12 text-emerald-500 mb-2" />
-                          <span className="text-sm font-medium text-emerald-700">
-                            카메라로 촬영
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-emerald-700">
-                        또는 식물 이름을 직접 입력하세요
-                      </p>
-                      <Input
-                        placeholder="예: 몬스테라, 장미, 선인장"
-                        className="rounded-lg border-emerald-200"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && e.target.value.trim()) {
-                            const plantName = e.target.value.trim();
-                            const tempData = {
-                              identification: {
-                                plant_name: plantName,
-                                scientific_name: '',
-                                confidence: 1.0,
-                              },
-                              careGuide: null,
-                              growthPrediction: null,
-                              uploadedImageUrl: '/images/mimg.jpg',
-                              timestamp: new Date().toISOString(),
-                            };
-                            localStorage.setItem('latest-plant-identification', JSON.stringify(tempData));
-                            setIdentifyResult(tempData);
-                            setIdentifyPreview('/images/mimg.jpg');
-                            setShowIdentify(false);
-                            toast({
-                              title: '식물 등록 완료',
-                              description: `${plantName}이(가) 등록되었습니다.`,
-                            });
-                          }
-                        }}
+            {!identifyPreview ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                      {/* 갤러리에서 선택 */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => processIdentifyFile(e.target.files?.[0])}
+                        className="hidden"
+                        id="gallery-upload-growth"
                       />
+                      <label
+                        htmlFor="gallery-upload-growth"
+                        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition-all hover:border-emerald-500 hover:scale-105 bg-white"
+                      >
+                        <ImageIcon className="w-16 h-16 text-emerald-500 mb-3" />
+                        <span className="text-lg font-semibold text-emerald-700 mb-1">
+                          갤러리에서 선택
+                        </span>
+                        <span className="text-sm text-emerald-600">
+                          저장된 사진 선택
+                        </span>
+                      </label>
+
+                      {/* 카메라로 촬영 */}
+                      <input
+                        ref={cameraInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => processIdentifyFile(e.target.files?.[0])}
+                        className="hidden"
+                        id="camera-upload-growth"
+                      />
+                      <label
+                        htmlFor="camera-upload-growth"
+                        className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition-all hover:border-emerald-500 hover:scale-105 bg-white"
+                      >
+                        <Camera className="w-16 h-16 text-emerald-500 mb-3" />
+                        <span className="text-lg font-semibold text-emerald-700 mb-1">
+                          카메라로 촬영
+                        </span>
+                        <span className="text-sm text-emerald-600">
+                          웹캠으로 촬영
+                        </span>
+                      </label>
                     </div>
+
+                  {/* 드래그 앤 드롭 안내 */}
+                  <div
+                    className={`p-6 border-2 border-dashed rounded-xl text-center transition-all ${
+                      dragActive
+                        ? 'border-emerald-500 bg-emerald-100'
+                        : 'border-emerald-200 bg-emerald-50'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <Upload className={`w-12 h-12 mx-auto mb-2 transition-all ${
+                      dragActive ? 'text-emerald-600 scale-110' : 'text-emerald-400'
+                    }`} />
+                    <p className="text-emerald-700 font-medium">
+                      {dragActive ? '이미지를 여기에 놓으세요!' : '또는 이미지를 드래그 & 드롭'}
+                    </p>
+                    <p className="text-sm text-emerald-600 mt-1">
+                      JPG, PNG 등 이미지 파일
+                    </p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div
-                      className="w-full aspect-video rounded-xl border-2 border-emerald-200"
-                      style={{
-                        backgroundImage: `url(${identifyPreview})`,
-                        backgroundSize: 'contain',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat',
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold text-emerald-700">
+                      또는 식물 이름을 직접 입력하세요
+                    </p>
+                    <Input
+                      placeholder="예: 몬스테라, 장미, 선인장"
+                      className="rounded-lg border-emerald-200 focus:border-emerald-500"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.target.value.trim()) {
+                          const plantName = e.target.value.trim();
+                          const tempData = {
+                            identification: {
+                              plant_name: plantName,
+                              scientific_name: '',
+                              confidence: 1.0,
+                            },
+                            careGuide: null,
+                            growthPrediction: null,
+                            uploadedImageUrl: '/images/mimg.jpg',
+                            timestamp: new Date().toISOString(),
+                          };
+                          localStorage.setItem('latest-plant-identification', JSON.stringify(tempData));
+                          setIdentifyResult(tempData);
+                          setIdentifyPreview('/images/mimg.jpg');
+                          setShowIdentify(false);
+                          toast({
+                            title: '식물 등록 완료',
+                            description: `${plantName}이(가) 등록되었습니다.`,
+                          });
+                        }
                       }}
                     />
-                    
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={handleIdentifySubmit}
-                        disabled={identifyLoading}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
-                      >
-                        {identifyLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            식별 중...
-                          </>
-                        ) : (
-                          '식별 시작'
-                        )}
-                      </Button>
-                      <Button
-                        onClick={handleRemoveIdentifyImage}
-                        variant="outline"
-                        className="border-red-300 text-red-600 hover:bg-red-50 rounded-full"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        삭제
-                      </Button>
-                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="w-full aspect-video rounded-xl border-2 border-emerald-200 bg-white overflow-hidden"
+                    style={{
+                      backgroundImage: `url(${identifyPreview})`,
+                      backgroundSize: 'contain',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                    }}
+                  />
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleRemoveIdentifyImage}
+                      variant="outline"
+                      className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      이미지 삭제
+                    </Button>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={handleIdentifySubmit}
+                      disabled={identifyLoading}
+                      className="px-10 py-6 text-lg font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {identifyLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          식별 중...
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp className="w-5 h-5 mr-2" />
+                          예측 시작
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </>
+              )}
           </motion.div>
+        )}
+
+        {/* 로딩 오버레이 */}
+        {identifyLoading && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 mx-auto mb-4 text-emerald-500 animate-spin" />
+                <h3 className="text-xl font-bold text-emerald-800 mb-2">이미지 분석 중...</h3>
+                <p className="text-emerald-600">
+                  AI가 식물을 식별하고 있습니다. 잠시만 기다려주세요.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* 성장 그래프 (종식별 완료 후에만 표시) */}
@@ -437,10 +494,10 @@ export default function GrowthStandalone() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <Card className="rounded-2xl shadow-lg border-emerald-200">
+              <Card className="rounded-2xl shadow-lg border-emerald-200 bg-white">
                 <CardHeader>
-                  <CardTitle className="text-emerald-800">
-                    12개월 성장 비교 그래프
+                  <CardTitle className="text-emerald-800 text-xl">
+                    12개월 예측 비교 그래프
                   </CardTitle>
                   <p className="text-sm text-emerald-600">
                     최적 관리 vs 부족한 관리
@@ -529,10 +586,10 @@ export default function GrowthStandalone() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <Card className="rounded-2xl shadow-lg border-emerald-200">
+              <Card className="rounded-2xl shadow-lg border-emerald-200 bg-white">
                 <CardHeader>
-                  <CardTitle className="text-emerald-800">
-                    {growthData.plantName} 성장 관리 팁
+                  <CardTitle className="text-emerald-800 text-xl">
+                    {growthData.plantName} 관리 팁
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

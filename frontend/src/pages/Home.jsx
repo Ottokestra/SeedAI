@@ -57,7 +57,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.6 }}
           >
-            흙과 잎, 뿌리까지. 복잡한 식물 관리, 인공지능이 쉽고 정확하게 분석하고 안내합니다.
+           복잡한 식물 관리, 인공지능이 쉽고 정확하게 분석하고 안내합니다.
           </motion.p>
           
           {/* 버튼 그룹 - stagger 애니메이션 */}

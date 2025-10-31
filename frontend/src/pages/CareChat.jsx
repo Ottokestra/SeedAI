@@ -138,22 +138,10 @@ export default function CareChat() {
       }
     } catch (error) {
       console.error('Identify error:', error);
-      
-      let errorTitle = '식별 실패';
-      let errorMsg = '알 수 없는 오류가 발생했습니다.';
-      
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        errorTitle = '백엔드 서버 연결 실패';
-        errorMsg = '백엔드 서버가 실행 중인지 확인해주세요. BACKEND_START_GUIDE.md 파일을 참고하세요.';
-      } else if (error.response) {
-        errorMsg = error.response.data?.detail || `서버 오류 (${error.response.status})`;
-      }
-      
       toast({
-        title: errorTitle,
-        description: errorMsg,
+        title: '식별 실패',
+        description: '네트워크 오류가 발생했습니다.',
         variant: 'destructive',
-        duration: 8000,
       });
     } finally {
       setIdentifyLoading(false);

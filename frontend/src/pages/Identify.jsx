@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { identifyPlant } from '../api/client';
 import ResultList from '../components/ResultList';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { usePersistedState } from '@/hooks/usePersistedState';
 import { Loader2, Upload, X, RefreshCw, Camera, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import React, { useRef } from "react";
+
 
 export default function Identify() {
   const { toast } = useToast();
@@ -15,7 +17,7 @@ export default function Identify() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
-  
+
   // 영구 저장 상태 (뒤로가기 시 복원)
   const [preview, setPreview] = usePersistedState('identify-preview', '');
   const [result, setResult] = usePersistedState('identify-result', null);
@@ -105,10 +107,10 @@ export default function Identify() {
   // 웹캠 시작
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
@@ -158,7 +160,7 @@ export default function Identify() {
       if (blob) {
         const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
         const previewUrl = URL.createObjectURL(blob);
-        
+
         setFile(file);
         setPreview(previewUrl);
         setResult(null);
@@ -245,24 +247,11 @@ export default function Identify() {
       
     } catch (error) {
       console.error('Identify error:', error);
-      
-      let errorTitle = '식별 실패';
-      let errorMsg = '알 수 없는 오류가 발생했습니다.';
-      
-      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        errorTitle = '백엔드 서버 연결 실패';
-        errorMsg = '백엔드 서버가 실행 중인지 확인해주세요. (http://localhost:8000)\n\n터미널에서 다음 명령어를 실행하세요:\ncd backend && uvicorn app.main:app --reload --port 8000';
-      } else if (error.response) {
-        errorMsg = error.response.data?.detail || `서버 오류 (${error.response.status})`;
-      } else if (error.request) {
-        errorMsg = '서버로부터 응답이 없습니다. 네트워크 연결을 확인해주세요.';
-      }
-      
+      const errorMsg = error.response?.data?.detail || '네트워크 오류가 발생했습니다.';
       toast({
-        title: errorTitle,
+        title: '식별 실패',
         description: errorMsg,
         variant: 'destructive',
-        duration: 8000, // 8초 동안 표시
       });
     } finally {
       setLoading(false);
@@ -396,7 +385,7 @@ export default function Identify() {
             >
               {/* 드래그 중 오버레이 */}
               {isDragging && (
-                <div 
+                <div
                   className="absolute inset-0 bg-emerald-500/80 flex flex-col items-center justify-center z-10"
                   onDragOver={handleDragOver}
                   onDragEnter={handleDragEnter}
@@ -408,7 +397,7 @@ export default function Identify() {
                   <p className="text-white/90 text-sm">새로운 이미지로 변경됩니다</p>
                 </div>
               )}
-              
+
               {/* 드래그 영역 (전체) */}
               <div
                 className="absolute inset-0"
@@ -514,7 +503,7 @@ export default function Identify() {
               카메라로 촬영하기
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
             <video
               ref={videoRef}
@@ -523,7 +512,7 @@ export default function Identify() {
               muted
               className="w-full h-full object-cover"
             />
-            
+
             {/* 카메라 준비 중 */}
             {!cameraReady && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70">
