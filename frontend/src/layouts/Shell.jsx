@@ -61,6 +61,14 @@ export default function Shell() {
             >
               우리아이
             </NavLink>
+            <NavLink 
+              to="/detect" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              병충해 감지
+            </NavLink>
           </nav>
         </div>
       </header>

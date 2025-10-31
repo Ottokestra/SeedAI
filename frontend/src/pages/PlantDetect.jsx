@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import ImageUploader from '@/components/ImageUploader';
 import ResultDisplay from '@/components/ResultDisplay';
-import '@/styles/plant-detect.css'; // 기존 App.css의 내용을 이 파일로 이동/복사 추천
+import "./plant-detect.css";
 
-const API_BASE =
-    import.meta?.env?.VITE_API_BASE_URL ||
-    process.env.REACT_APP_API_BASE_URL ||
-    'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
 
 export default function PlantDetect() {
     const [result, setResult] = useState(null);
