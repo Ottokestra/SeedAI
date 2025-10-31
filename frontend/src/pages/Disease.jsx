@@ -2,31 +2,28 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Send, 
-  Sparkles, 
-  Bot, 
-  User, 
-  Trash2,
-  Loader2,
+  Bug,
   Upload,
-  X,
-  RefreshCw,
   Camera,
   Image as ImageIcon,
-  ArrowRight
+  X,
+  Loader2,
+  RefreshCw,
+  AlertTriangle,
+  Shield,
+  Info
 } from 'lucide-react';
 import { identifyPlant } from '../api/client';
 
-export default function CareChat() {
+export default function Disease() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -37,6 +34,13 @@ export default function CareChat() {
   const [identifyLoading, setIdentifyLoading] = useState(false);
   const [identifyResult, setIdentifyResult] = useState(null);
 
+  // 병충해 진단 상태
+  const [diseaseAnalysis, setDiseaseAnalysis] = useState({
+    isAnalyzed: false,
+    diseases: []
+  });
+  const [analyzing, setAnalyzing] = useState(false);
+
   // 로컬스토리지에서 저장된 종식별 정보 불러오기
   useEffect(() => {
     const savedIdentification = localStorage.getItem('latest-plant-identification');
@@ -45,35 +49,14 @@ export default function CareChat() {
         const data = JSON.parse(savedIdentification);
         setIdentifyResult(data);
         setIdentifyPreview(data.uploadedImageUrl);
-        setShowIdentify(false); // 이미 식별된 식물이 있으면 식별 UI 숨김
+        setShowIdentify(false);
       } catch (error) {
         console.error('Error loading saved identification:', error);
       }
     } else {
-      setShowIdentify(true); // 저장된 식물이 없으면 식별 UI 표시
+      setShowIdentify(true);
     }
   }, []);
-
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      role: 'assistant',
-      content: '안녕하세요! 🌱 AI 식물 관리 상담사입니다.\n식물 관리에 대해 무엇이든 물어보세요!',
-      timestamp: new Date().toISOString(),
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // 예시 질문들
-  const exampleQuestions = [
-    '몬스테라 물주기 주기는 어떻게 되나요?',
-    '잎이 노랗게 변하는 이유가 뭔가요?',
-    '겨울철 식물 관리법을 알려주세요',
-    '햇빛을 많이 받아야 하는 식물은?',
-    '초보자가 키우기 쉬운 식물 추천해주세요',
-    '식물 잎에 흰 가루가 생겼어요',
-  ];
 
   // 종식별 - 파일 처리
   const processIdentifyFile = (f) => {
@@ -82,7 +65,6 @@ export default function CareChat() {
     if (!f.type.startsWith('image/')) {
       toast({
         title: '이미지 파일만 업로드 가능합니다',
-        description: 'jpg, png 등의 이미지 파일을 선택해주세요.',
         variant: 'destructive',
       });
       return;
@@ -92,6 +74,7 @@ export default function CareChat() {
     const previewUrl = URL.createObjectURL(f);
     setIdentifyPreview(previewUrl);
     setIdentifyResult(null);
+    setDiseaseAnalysis({ isAnalyzed: false, diseases: [] });
   };
 
   // 종식별 실행
@@ -99,7 +82,6 @@ export default function CareChat() {
     if (!identifyFile) {
       toast({
         title: '이미지를 선택해주세요',
-        description: '식별할 식물 이미지를 업로드해야 합니다.',
         variant: 'destructive',
       });
       return;
@@ -119,20 +101,17 @@ export default function CareChat() {
           timestamp: new Date().toISOString(),
         };
         
-        // 로컬스토리지에 저장
         localStorage.setItem('latest-plant-identification', JSON.stringify(savedData));
         setIdentifyResult(savedData);
         setShowIdentify(false);
 
         toast({
           title: '식별 완료!',
-          description: data.message || `${data.identification.plant_name} 식별 완료`,
-          variant: 'default',
+          description: `${data.identification.plant_name} 식별 완료`,
         });
       } else {
         toast({
           title: '식별 실패',
-          description: data.message || '식물을 식별할 수 없습니다.',
           variant: 'destructive',
         });
       }
@@ -152,6 +131,7 @@ export default function CareChat() {
   const handleRemoveIdentifyImage = () => {
     setIdentifyFile(null);
     setIdentifyPreview('');
+    setDiseaseAnalysis({ isAnalyzed: false, diseases: [] });
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
@@ -162,122 +142,128 @@ export default function CareChat() {
     setIdentifyResult(null);
     setIdentifyFile(null);
     setIdentifyPreview('');
+    setDiseaseAnalysis({ isAnalyzed: false, diseases: [] });
     localStorage.removeItem('latest-plant-identification');
   };
 
-  // 관리법 상세 보기
-  const handleViewCareDetail = () => {
-    if (identifyResult && identifyResult.identification) {
-      const plantId = identifyResult.identification.plant_name.toLowerCase().replace(/\s+/g, '-');
-      navigate(`/care/${plantId}`, { 
-        state: { 
-          identification: identifyResult.identification,
-          careGuide: identifyResult.careGuide,
-          uploadedImageUrl: identifyResult.uploadedImageUrl
-        } 
-      });
-    }
-  };
-
-  // 메시지 전송
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // 병충해 분석 (임시 데이터)
+  const handleDiseaseAnalysis = () => {
+    setAnalyzing(true);
     
-    if (!input.trim()) {
-      toast({
-        title: '메시지를 입력해주세요',
-        variant: 'destructive',
-      });
-      return;
-    }
+    toast({
+      title: '병충해 분석 중...',
+      description: 'AI가 이미지를 분석하고 있습니다.',
+    });
 
-    // 사용자 메시지 추가
-    const userMessage = {
-      id: Date.now(),
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    // 백엔드 API 호출 시뮬레이션 (나중에 실제 API로 교체)
+    // 임시 데이터 생성
     setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: `"${input.trim()}"에 대한 답변입니다.\n\n현재 백엔드 개발 중이므로, 실제 AI 응답은 곧 제공됩니다. 🌿\n\n몬스테라의 경우:\n• 물주기: 흙이 마르면 충분히 주세요\n• 햇빛: 간접광이 좋습니다\n• 온도: 18-27°C가 적당합니다\n\n더 궁금한 점이 있으시면 언제든 물어보세요!`,
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  // 예시 질문 클릭
-  const handleExampleClick = (question) => {
-    setInput(question);
-    textareaRef.current?.focus();
-  };
-
-  // 대화 초기화
-  const handleClearChat = () => {
-    if (confirm('모든 대화 내역을 삭제하시겠습니까?')) {
-      setMessages([
+      const mockDiseases = [
         {
-          id: 1,
-          role: 'assistant',
-          content: '안녕하세요! 🌱 AI 식물 관리 상담사입니다.\n식물 관리에 대해 무엇이든 물어보세요!',
-          timestamp: new Date().toISOString(),
+          name: '흰가루병',
+          probability: 85,
+          severity: 'high',
+          symptoms: '잎 표면에 흰색 가루 같은 곰팡이가 발생하며, 심하면 잎이 말라 떨어집니다.',
+          treatment: '감염된 잎을 즉시 제거하고, 살균제를 7-10일 간격으로 2-3회 살포합니다. 통풍을 개선하고 잎에 물이 묻지 않도록 주의하세요.',
+          prevention: '통풍이 잘 되는 곳에 배치하고, 과습을 피하며, 정기적으로 잎을 확인합니다.'
+        },
+        {
+          name: '진딧물',
+          probability: 65,
+          severity: 'medium',
+          symptoms: '새순이나 잎 뒷면에 작은 녹색/검은색 벌레가 군집하여 즙을 빨아먹습니다.',
+          treatment: '물로 세척하거나 친환경 살충제(님오일, 제충국 등)를 사용합니다. 심한 경우 전용 살충제를 사용하세요.',
+          prevention: '정기적으로 잎을 관찰하고, 통풍을 유지하며, 무당벌레 같은 천적을 활용할 수 있습니다.'
+        },
+        {
+          name: '응애',
+          probability: 30,
+          severity: 'low',
+          symptoms: '잎에 작은 반점이 생기고 거미줄 같은 실이 보이며, 잎 색이 퇴색됩니다.',
+          treatment: '습도를 높이고 살비제를 사용합니다. 물로 잎을 자주 씻어주는 것도 도움이 됩니다.',
+          prevention: '습도를 적절히 유지하고(50% 이상), 건조한 환경을 피하며, 정기적으로 잎을 점검합니다.'
         }
-      ]);
-      toast({
-        title: '대화 내역이 삭제되었습니다',
+      ];
+
+      setDiseaseAnalysis({
+        isAnalyzed: true,
+        diseases: mockDiseases
       });
+      setAnalyzing(false);
+
+      toast({
+        title: '분석 완료!',
+        description: `${mockDiseases.length}개의 병충해가 감지되었습니다.`,
+      });
+    }, 2000);
+  };
+
+  // 위험도에 따른 색상
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'high': return 'text-red-700 bg-red-50 border-red-200';
+      case 'medium': return 'text-amber-700 bg-amber-50 border-amber-200';
+      case 'low': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
 
-  // 자동 스크롤
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // textarea 높이 자동 조절
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+  const getSeverityLabel = (severity) => {
+    switch (severity) {
+      case 'high': return '높음';
+      case 'medium': return '보통';
+      case 'low': return '낮음';
+      default: return '알 수 없음';
     }
-  }, [input]);
+  };
 
   return (
-    <div className="w-full min-h-[calc(100vh-73px)] flex flex-col bg-emerald-50">
-      <div className="max-w-4xl mx-auto w-full p-4 space-y-6">
+    <div className="w-full min-h-[calc(100vh-73px)] bg-emerald-50 py-12 px-4">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* 헤더 */}
         <motion.header 
-          className="text-center py-6"
+          className="text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center justify-center gap-2">
-            <Sparkles className="w-8 h-8 text-emerald-500" />
-            식물 관리법
+            <Bug className="w-8 h-8 text-emerald-500" />
+            병충해 진단
           </h1>
           <p className="text-lg text-emerald-600">
-            식물을 식별하고 AI 상담을 통해 관리법을 알아보세요
+            식물 이미지를 업로드하여 병충해를 진단받으세요
           </p>
         </motion.header>
+
+        {/* 임시 데이터 안내 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card className="rounded-xl shadow-md border-blue-200 bg-blue-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-blue-800 font-medium mb-1">
+                    임시 데이터 표시 중
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    백엔드 개발 중이므로 임시 병충해 진단 데이터를 표시합니다. 실제 AI 진단은 곧 제공될 예정입니다.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* 종식별 결과 표시 */}
         {identifyResult && !showIdentify && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Card className="rounded-2xl shadow-lg border-emerald-200">
               <CardHeader>
@@ -312,13 +298,25 @@ export default function CareChat() {
                         {identifyResult.identification.scientific_name}
                       </p>
                     )}
-                    <Button
-                      onClick={handleViewCareDetail}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
-                    >
-                      상세 관리법 보기
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    {!diseaseAnalysis.isAnalyzed && (
+                      <Button
+                        onClick={handleDiseaseAnalysis}
+                        disabled={analyzing}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
+                      >
+                        {analyzing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            분석 중...
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-4 h-4 mr-2" />
+                            병충해 분석 시작
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -331,21 +329,19 @@ export default function CareChat() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Card className="rounded-2xl shadow-lg border-emerald-200">
               <CardHeader>
                 <CardTitle className="text-emerald-800">식물 종 식별</CardTitle>
                 <p className="text-sm text-emerald-600">
-                  먼저 관리할 식물을 식별해주세요
+                  먼저 식물을 식별해주세요
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* 이미지 업로드 영역 */}
                 {!identifyPreview ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      {/* 갤러리에서 선택 */}
                       <div>
                         <input
                           ref={fileInputRef}
@@ -353,10 +349,10 @@ export default function CareChat() {
                           accept="image/*"
                           onChange={(e) => processIdentifyFile(e.target.files?.[0])}
                           className="hidden"
-                          id="gallery-upload"
+                          id="gallery-upload-disease"
                         />
                         <label
-                          htmlFor="gallery-upload"
+                          htmlFor="gallery-upload-disease"
                           className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition h-40"
                         >
                           <ImageIcon className="w-12 h-12 text-emerald-500 mb-2" />
@@ -366,7 +362,6 @@ export default function CareChat() {
                         </label>
                       </div>
 
-                      {/* 카메라로 촬영 */}
                       <div>
                         <input
                           ref={cameraInputRef}
@@ -375,10 +370,10 @@ export default function CareChat() {
                           capture="environment"
                           onChange={(e) => processIdentifyFile(e.target.files?.[0])}
                           className="hidden"
-                          id="camera-upload"
+                          id="camera-upload-disease"
                         />
                         <label
-                          htmlFor="camera-upload"
+                          htmlFor="camera-upload-disease"
                           className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition h-40"
                         >
                           <Camera className="w-12 h-12 text-emerald-500 mb-2" />
@@ -389,7 +384,6 @@ export default function CareChat() {
                       </div>
                     </div>
 
-                    {/* 텍스트로 입력 */}
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-emerald-700">
                         또는 식물 이름을 직접 입력하세요
@@ -399,7 +393,6 @@ export default function CareChat() {
                         className="rounded-lg border-emerald-200"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && e.target.value.trim()) {
-                            // 텍스트 입력으로 임시 데이터 생성
                             const plantName = e.target.value.trim();
                             const tempData = {
                               identification: {
@@ -427,7 +420,6 @@ export default function CareChat() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* 미리보기 */}
                     <div
                       className="w-full aspect-video rounded-xl border-2 border-emerald-200"
                       style={{
@@ -469,138 +461,95 @@ export default function CareChat() {
           </motion.div>
         )}
 
-        {/* AI 상담 채팅 (종식별 완료 후에만 표시) */}
-        {identifyResult && !showIdentify && (
+        {/* 병충해 진단 결과 */}
+        {diseaseAnalysis.isAnalyzed && diseaseAnalysis.diseases.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
+            className="space-y-4"
           >
-            <Card className="rounded-2xl shadow-lg border-emerald-200">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-emerald-800">AI 관리 상담</CardTitle>
-                  {messages.length > 1 && (
-                    <Button
-                      onClick={handleClearChat}
-                      variant="outline"
-                      size="sm"
-                      className="border-red-300 text-red-600 hover:bg-red-50 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      초기화
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* 메시지 영역 */}
-                <div className="h-[400px] overflow-y-auto px-2 py-4 space-y-4 mb-4">
-                  <AnimatePresence>
-                    {messages.map((message, index) => (
-                      <motion.div
-                        key={message.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-emerald-800">
+                진단 결과 ({diseaseAnalysis.diseases.length}개 발견)
+              </h2>
+              <Button
+                onClick={handleDiseaseAnalysis}
+                variant="outline"
+                size="sm"
+                className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-lg"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                다시 분석
+              </Button>
+            </div>
+
+            {diseaseAnalysis.diseases.map((disease, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.1 }}
+              >
+                <Card className={`rounded-xl shadow-md border-2 ${getSeverityColor(disease.severity)}`}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5" />
+                        {disease.name}
+                      </CardTitle>
+                      <Badge 
+                        variant="outline" 
+                        className={`${getSeverityColor(disease.severity)} border-2 px-3 py-1`}
                       >
-                        <div className={`flex gap-2 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                            message.role === 'user' 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-white border-2 border-emerald-300 text-emerald-600'
-                          }`}>
-                            {message.role === 'user' ? (
-                              <User className="w-4 h-4" />
-                            ) : (
-                              <Bot className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div className={`px-4 py-2 rounded-lg ${
-                            message.role === 'user'
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-50 text-emerald-900'
-                          }`}>
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  {isLoading && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex justify-start"
-                    >
-                      <div className="flex gap-2 max-w-[80%]">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white border-2 border-emerald-300 text-emerald-600">
-                          <Bot className="w-4 h-4" />
-                        </div>
-                        <div className="px-4 py-2 rounded-lg bg-emerald-50">
-                          <div className="flex items-center gap-2 text-emerald-600">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span className="text-sm">답변 생성 중...</span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* 예시 질문 */}
-                {messages.length === 1 && (
-                  <div className="mb-4">
-                    <p className="text-sm text-emerald-700 font-medium mb-2">💡 이런 질문을 해보세요:</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {exampleQuestions.slice(0, 4).map((question, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleExampleClick(question)}
-                          className="text-left px-3 py-2 bg-white hover:bg-emerald-50 border border-emerald-200 hover:border-emerald-400 rounded-lg text-xs text-emerald-700 transition"
-                        >
-                          {question}
-                        </button>
-                      ))}
+                        위험도: {getSeverityLabel(disease.severity)}
+                      </Badge>
                     </div>
-                  </div>
-                )}
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* 감염 확률 */}
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <span className="text-sm font-medium">감염 확률</span>
+                        <span className="text-sm font-bold">{disease.probability}%</span>
+                      </div>
+                      <Progress value={disease.probability} className="h-3" />
+                    </div>
 
-                {/* 입력 영역 */}
-                <form onSubmit={handleSubmit} className="flex gap-2">
-                  <Textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit(e);
-                      }
-                    }}
-                    placeholder="식물 관리에 대해 질문해보세요..."
-                    className="flex-1 min-h-[60px] max-h-[120px] resize-none rounded-lg border-emerald-200"
-                    disabled={isLoading}
-                    rows={1}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={isLoading || !input.trim()}
-                    className="self-end bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+                    {/* 증상 */}
+                    <div className="p-3 bg-white/50 rounded-lg">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <span className="text-lg">📋</span>
+                        증상
+                      </h4>
+                      <p className="text-sm">{disease.symptoms}</p>
+                    </div>
+
+                    {/* 대처 방법 */}
+                    <div className="p-3 bg-white/50 rounded-lg">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <span className="text-lg">💊</span>
+                        대처 방법
+                      </h4>
+                      <p className="text-sm">{disease.treatment}</p>
+                    </div>
+
+                    {/* 예방법 */}
+                    <div className="p-3 bg-white/50 rounded-lg">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <span className="text-lg">🛡️</span>
+                        예방법
+                      </h4>
+                      <p className="text-sm">{disease.prevention}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </motion.div>
         )}
       </div>
     </div>
   );
 }
+

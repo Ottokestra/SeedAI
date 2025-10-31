@@ -1,25 +1,16 @@
-<<<<<<< HEAD
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 import json
 import re
 from typing import Optional
 from openai import OpenAI
-=======
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
->>>>>>> origin/dev
 from app.config import settings
 from app.models.schemas import CareGuide
 
 # 전역 변수로 모델 캐싱
 _text_model = None
 _tokenizer = None
-<<<<<<< HEAD
 _openai_client = None
-_pllama_pipeline = None
-=======
->>>>>>> origin/dev
 
 
 def load_text_generator():
@@ -52,7 +43,6 @@ def load_text_generator():
     return _tokenizer, _text_model
 
 
-<<<<<<< HEAD
 def load_openai_client():
     """OpenAI 클라이언트를 로드합니다."""
     global _openai_client
@@ -97,96 +87,9 @@ def load_openai_client():
     return _openai_client
 
 
-def load_pllama_pipeline():
-    """PLLaMa 파이프라인을 로드합니다."""
-    global _pllama_pipeline
-    
-    if _pllama_pipeline is None:
-        try:
-            print(f"PLLaMa 모델 로딩 중: {settings.pllama_model}")
-            # PLLaMa는 텍스트 생성 파이프라인으로 사용
-            # 실제 모델명은 나중에 변경 가능
-            tokenizer = AutoTokenizer.from_pretrained(
-                settings.pllama_model,
-                cache_dir=settings.cache_dir,
-                token=settings.huggingface_token,
-                trust_remote_code=True
-            )
-            model = AutoModelForCausalLM.from_pretrained(
-                settings.pllama_model,
-                cache_dir=settings.cache_dir,
-                token=settings.huggingface_token,
-                trust_remote_code=True,
-                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-                device_map="auto" if torch.cuda.is_available() else None
-            )
-            if torch.cuda.is_available():
-                model = model.cuda()
-            model.eval()
-            
-            _pllama_pipeline = pipeline(
-                "text-generation",
-                model=model,
-                tokenizer=tokenizer,
-                device=0 if torch.cuda.is_available() else -1
-            )
-            print("PLLaMa 모델 로딩 완료!")
-        except Exception as e:
-            print(f"PLLaMa 모델 로딩 실패: {e}")
-            print("기본 관리 가이드를 사용합니다.")
-            _pllama_pipeline = None
-    
-    return _pllama_pipeline
-
-
-def generate_care_guide_with_pllama(plant_name: str) -> Optional[str]:
-    """
-    PLLaMa를 사용하여 식물 관리 가이드를 생성합니다.
-    
-    Args:
-        plant_name: 식물 종명
-        
-    Returns:
-        str: 생성된 관리 가이드 (영어)
-    """
-    try:
-        pipeline = load_pllama_pipeline()
-        if pipeline is None:
-            return None
-        
-        prompt = f"""Plant name: {plant_name}
-Please provide a comprehensive care guide for this plant in English. Include:
-- Watering requirements
-- Sunlight needs
-- Temperature range
-- Humidity requirements
-- Soil type
-- Care tips
-
-Care guide:"""
-        
-        result = pipeline(
-            prompt,
-            max_length=500,
-            num_return_sequences=1,
-            temperature=0.7,
-            do_sample=True
-        )
-        
-        generated_text = result[0]['generated_text']
-        # 프롬프트 제거
-        care_guide_text = generated_text.replace(prompt, "").strip()
-        
-        return care_guide_text
-    
-    except Exception as e:
-        print(f"PLLaMa 가이드 생성 오류: {e}")
-        return None
-
-
 def generate_care_guide_with_gpt(plant_name: str) -> Optional[dict]:
     """
-    GPT-4.0 Mini를 사용하여 직접 식물 관리 가이드를 생성합니다.
+    GPT-4o-mini를 사용하여 직접 식물 관리 가이드를 생성합니다.
     
     Args:
         plant_name: 식물 종명
@@ -259,81 +162,9 @@ def generate_care_guide_with_gpt(plant_name: str) -> Optional[dict]:
         return None
 
 
-def convert_to_korean_standard(pllama_response: str, plant_name: str) -> Optional[dict]:
-    """
-    GPT-4.0 Mini를 사용하여 PLLaMa 응답을 한국 기준에 맞게 변환합니다.
-    
-    Args:
-        pllama_response: PLLaMa로부터 생성된 관리 가이드
-        plant_name: 식물 종명
-        
-    Returns:
-        dict: 한국 기준 관리 가이드 (JSON 형식)
-    """
-    try:
-        client = load_openai_client()
-        if client is None:
-            return None
-        
-        prompt = f"""다음은 PLLaMa로부터 생성된 식물 관리 가이드입니다.
-이 정보를 한국의 기후와 환경에 맞게 변환해주세요:
-
-- 한국의 계절별 기후 고려 (여름 고온다습, 겨울 건조)
-- 실내 화분 재배 기준
-- 한국에서 구하기 쉬운 토양/비료 기준
-- 온도/습도 단위를 한국 기준으로
-- 한국어로 자연스럽게 작성
-
-식물명: {plant_name}
-
-제공된 정보:
-{pllama_response}
-
-반드시 다음 JSON 형식으로만 반환하세요 (다른 텍스트 없이):
-{{
-  "watering": "물주기 정보",
-  "sunlight": "햇빛 정보",
-  "temperature": "온도 정보",
-  "humidity": "습도 정보",
-  "soil": "토양 정보",
-  "tips": ["팁1", "팁2", "팁3"]
-}}"""
-        
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a plant care expert specializing in Korean indoor plant cultivation. Always respond with valid JSON only."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=1000
-        )
-        
-        content = response.choices[0].message.content.strip()
-        
-        # JSON 추출 (code block 제거)
-        json_match = re.search(r'\{[\s\S]*\}', content)
-        if json_match:
-            json_str = json_match.group(0)
-        else:
-            json_str = content
-        
-        care_data = json.loads(json_str)
-        return care_data
-    
-    except Exception as e:
-        print(f"GPT 변환 오류: {e}")
-        return None
-
-
 def generate_care_guide(plant_name: str) -> CareGuide:
     """
-    GPT-4.0 Mini를 사용하여 식물 관리 가이드를 생성합니다.
-=======
-def generate_care_guide(plant_name: str) -> CareGuide:
-    """
-    Transformers 라이브러리를 직접 사용하여 식물 관리 가이드를 생성합니다.
->>>>>>> origin/dev
+    GPT-4o-mini를 사용하여 식물 관리 가이드를 생성합니다.
     
     Args:
         plant_name: 식물 종명
@@ -341,10 +172,9 @@ def generate_care_guide(plant_name: str) -> CareGuide:
     Returns:
         CareGuide: 식물 관리 가이드
     """
-<<<<<<< HEAD
     print(f"[가이드 생성 시작] 식물명: {plant_name}")
     
-    # GPT-4.0 Mini로 직접 생성
+    # GPT-4o-mini로 직접 생성
     korean_guide = generate_care_guide_with_gpt(plant_name)
     
     if korean_guide:
@@ -368,10 +198,6 @@ def generate_care_guide(plant_name: str) -> CareGuide:
     
     # 최종 fallback: 기본 가이드 반환
     print(f"[경고] AI 생성 실패, 기본 가이드 사용: {plant_name}")
-=======
-    # 실제 AI 생성 대신 규칙 기반으로 관리 가이드 제공
-    # (텍스트 생성 모델은 리소스가 많이 필요하고 한국어 지원이 제한적임)
->>>>>>> origin/dev
     return get_default_care_guide(plant_name)
 
 
@@ -447,4 +273,3 @@ def get_default_care_guide(plant_name: str) -> CareGuide:
             "통풍이 잘 되는 곳에 두어 병해충을 예방하세요"
         ]
     )
-

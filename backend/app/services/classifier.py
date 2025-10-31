@@ -10,7 +10,6 @@ from app.models.schemas import PlantIdentification
 # 전역 변수로 모델 캐싱
 _classifier_model = None
 _processor = None
-_translator = None
 _translation_cache = {}
 
 
@@ -108,13 +107,17 @@ def classify_plant(image: bytes) -> PlantIdentification:
         
         if results:
             top_result = results[0]
-            plant_name = format_plant_name(top_result["label"])
+            plant_name_en = format_plant_name(top_result["label"])
             confidence = top_result["score"]
-            common_names = [format_plant_name(r["label"]) for r in results[:3]]
+            common_names_en = [format_plant_name(r["label"]) for r in results[:3]]
+            
+            # GPT-4o-mini로 식물 이름 번역
+            plant_name = translate_to_korean(plant_name_en)
+            common_names = [translate_to_korean(name) for name in common_names_en]
             
             return PlantIdentification(
                 plant_name=plant_name,
-                scientific_name=None,
+                scientific_name=plant_name_en,  # 영어 이름을 scientific_name으로 저장
                 confidence=confidence,
                 common_names=common_names
             )
@@ -144,39 +147,12 @@ def get_default_identification() -> PlantIdentification:
     )
 
 
-def load_translator():
-    """번역 모델을 로드합니다 (처음 한 번만 로드)"""
-    global _translator
-    
-    if _translator is None:
-        print("번역 모델 로딩 중: facebook/nllb-200-distilled-600M")
-        try:
-            _translator = pipeline(
-                "translation",
-                model="facebook/nllb-200-distilled-600M",
-                device=0 if torch.cuda.is_available() else -1
-            )
-            print("번역 모델 로딩 완료!")
-        except Exception as e:
-            print(f"번역 모델 로딩 실패: {e}")
-            _translator = None
-    
-    return _translator
-
-
 def translate_to_korean(text: str) -> str:
     """
-<<<<<<< HEAD
     GPT-4o-mini를 사용하여 영어 식물 이름을 한국어로 번역합니다.
     
     Args:
         text: 영어 식물 이름
-=======
-    영어 식물 이름을 한국어로 번역합니다.
-    
-    Args:
-        text: 영어 텍스트
->>>>>>> origin/dev
         
     Returns:
         str: 한국어 번역 결과
@@ -188,7 +164,6 @@ def translate_to_korean(text: str) -> str:
         return _translation_cache[text]
     
     try:
-<<<<<<< HEAD
         # OpenAI 클라이언트 import
         from app.services.guide import load_openai_client
         
@@ -219,36 +194,11 @@ def translate_to_korean(text: str) -> str:
         # 캐시에 저장
         _translation_cache[text] = translated
         print(f"[GPT 번역] {text} → {translated}")
-=======
-        translator = load_translator()
-        
-        if translator is None:
-            # 번역 모델 로드 실패 시 원문 반환
-            return text
-        
-        # NLLB 번역 실행
-        result = translator(
-            text,
-            src_lang="eng_Latn",
-            tgt_lang="kor_Hang",
-            max_length=100
-        )
-        
-        translated = result[0]['translation_text']
-        
-        # 캐시에 저장
-        _translation_cache[text] = translated
-        print(f"[번역] {text} → {translated}")
->>>>>>> origin/dev
         
         return translated
         
     except Exception as e:
-<<<<<<< HEAD
         print(f"[번역 오류] {text}: {e}")
-=======
-        print(f"번역 오류: {e}")
->>>>>>> origin/dev
         # 오류 발생 시 원문 반환
         return text
 
@@ -266,13 +216,17 @@ def classify_plant_with_plantrecog(image: bytes) -> PlantIdentification:
                 predictions = result["payload"].get("predictions", [])
                 if predictions and len(predictions) > 0:
                     top_prediction = predictions[0]
-                    plant_name = format_plant_name(top_prediction["name"])
+                    plant_name_en = format_plant_name(top_prediction["name"])
                     confidence = top_prediction["score"]
-                    common_names = [format_plant_name(p["name"]) for p in predictions[1:4]]
+                    common_names_en = [format_plant_name(p["name"]) for p in predictions[1:4]]
+                    
+                    # GPT-4o-mini로 식물 이름 번역
+                    plant_name = translate_to_korean(plant_name_en)
+                    common_names = [translate_to_korean(name) for name in common_names_en]
                     
                     return PlantIdentification(
                         plant_name=plant_name,
-                        scientific_name=None,
+                        scientific_name=plant_name_en,  # 영어 이름을 scientific_name으로 저장
                         confidence=confidence,
                         common_names=common_names
                     )
@@ -294,25 +248,9 @@ def classify_plant_multi_model(image: bytes) -> dict:
 
 
 def classify_plant_multi_model_kr(image: bytes) -> dict:
-    """두 모델을 모두 사용하여 식물을 식별하고 결과를 비교합니다 (한국어 번역 버전)."""
-    result = classify_plant_multi_model(image)
-    
-    # 모델1 결과 번역
-    vit_result = result["vit_model"]
-    vit_result.plant_name = translate_to_korean(vit_result.plant_name)
-    if vit_result.common_names:
-        vit_result.common_names = [translate_to_korean(name) for name in vit_result.common_names]
-    
-    # 모델2 결과 번역
-    plantrecog_result = result["plantrecog_model"]
-    plantrecog_result.plant_name = translate_to_korean(plantrecog_result.plant_name)
-    if plantrecog_result.common_names:
-        plantrecog_result.common_names = [translate_to_korean(name) for name in plantrecog_result.common_names]
-    
-    return {
-        "vit_model": vit_result,
-        "plantrecog_model": plantrecog_result
-    }
+    """두 모델을 모두 사용하여 식물을 식별하고 결과를 비교합니다 (한국어 번역은 이미 적용됨)."""
+    # 번역은 classify_plant, classify_plant_with_plantrecog에서 이미 적용됨
+    return classify_plant_multi_model(image)
 
 
 def classify_plant_auto_select(image: bytes) -> PlantIdentification:
@@ -342,17 +280,8 @@ def classify_plant_auto_select(image: bytes) -> PlantIdentification:
 
 def classify_plant_auto_select_kr(image: bytes) -> PlantIdentification:
     """
-    두 모델을 실행하고 최적의 결과를 자동으로 선택합니다 (한국어 번역 버전).
-    테스트 페이지 전용.
+    두 모델을 실행하고 최적의 결과를 자동으로 선택합니다 (한국어 번역은 이미 적용됨).
     """
-    result = classify_plant_auto_select(image)
-    
-    # 식물 이름 번역
-    result.plant_name = translate_to_korean(result.plant_name)
-    
-    # 다른 가능성도 번역
-    if result.common_names:
-        result.common_names = [translate_to_korean(name) for name in result.common_names]
-    
-    return result
+    # 번역은 classify_plant, classify_plant_with_plantrecog에서 이미 적용됨
+    return classify_plant_auto_select(image)
 

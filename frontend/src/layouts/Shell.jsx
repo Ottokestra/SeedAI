@@ -15,19 +15,27 @@ export default function Shell() {
             />
             <div className="leading-tight">
               <div className="font-semibold text-lg text-gray-800" style={{ letterSpacing: '0.02em' }}>새싹 아이</div>
-              <div className="text-[10px] tracking-[0.25em] text-gray-500 font-light">SEED-AI</div>
+              <div className="text-[10px] tracking-[0.25em] text-gray-500 font-light">PLANT-AI</div>
             </div>
           </Link>
           
           {/* 네비게이션 메뉴 */}
           <nav className="flex gap-4 text-sm font-medium">
             <NavLink 
+              to="/guide" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              새싹아이란?
+            </NavLink>
+            <NavLink 
               to="/identify" 
               className={({ isActive }) => 
                 `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
               }
             >
-              종 식별
+              식별
             </NavLink>
             <NavLink 
               to="/care" 
@@ -35,7 +43,15 @@ export default function Shell() {
                 `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
               }
             >
-              식물Care
+              관리법
+            </NavLink>
+            <NavLink 
+              to="/growth" 
+              className={({ isActive }) => 
+                `hover:text-emerald-700 transition ${isActive ? 'text-emerald-700 font-semibold' : 'text-emerald-900'}`
+              }
+            >
+              성장도
             </NavLink>
             <NavLink 
               to="/mychild" 

@@ -2,31 +2,37 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Send, 
-  Sparkles, 
-  Bot, 
-  User, 
-  Trash2,
-  Loader2,
+  TrendingUp,
   Upload,
-  X,
-  RefreshCw,
   Camera,
   Image as ImageIcon,
-  ArrowRight
+  X,
+  Loader2,
+  RefreshCw,
+  ArrowRight,
+  Info
 } from 'lucide-react';
 import { identifyPlant } from '../api/client';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  AreaChart
+} from 'recharts';
 
-export default function CareChat() {
+export default function GrowthStandalone() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -45,35 +51,53 @@ export default function CareChat() {
         const data = JSON.parse(savedIdentification);
         setIdentifyResult(data);
         setIdentifyPreview(data.uploadedImageUrl);
-        setShowIdentify(false); // 이미 식별된 식물이 있으면 식별 UI 숨김
+        setShowIdentify(false);
       } catch (error) {
         console.error('Error loading saved identification:', error);
       }
     } else {
-      setShowIdentify(true); // 저장된 식물이 없으면 식별 UI 표시
+      setShowIdentify(true);
     }
   }, []);
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      role: 'assistant',
-      content: '안녕하세요! 🌱 AI 식물 관리 상담사입니다.\n식물 관리에 대해 무엇이든 물어보세요!',
-      timestamp: new Date().toISOString(),
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // 임시 성장 데이터 생성
+  const generateGrowthData = () => {
+    if (!identifyResult) return null;
 
-  // 예시 질문들
-  const exampleQuestions = [
-    '몬스테라 물주기 주기는 어떻게 되나요?',
-    '잎이 노랗게 변하는 이유가 뭔가요?',
-    '겨울철 식물 관리법을 알려주세요',
-    '햇빛을 많이 받아야 하는 식물은?',
-    '초보자가 키우기 쉬운 식물 추천해주세요',
-    '식물 잎에 흰 가루가 생겼어요',
-  ];
+    const plantName = identifyResult.identification.plant_name;
+    const baseGrowthRate = 3.5;
+    
+    // 잘 키웠을 때 데이터
+    const optimalData = [];
+    // 못 키웠을 때 데이터
+    const poorData = [];
+    
+    for (let i = 1; i <= 12; i++) {
+      const optimalHeight = Math.round((15 + (i - 1) * baseGrowthRate) * 10) / 10;
+      const poorHeight = Math.round((15 + (i - 1) * (baseGrowthRate * 0.6)) * 10) / 10;
+      
+      optimalData.push({
+        month: `${i}개월`,
+        optimal: optimalHeight,
+        poor: poorHeight,
+      });
+      
+      poorData.push({
+        month: `${i}개월`,
+        height: poorHeight,
+      });
+    }
+    
+    return {
+      plantName,
+      optimalData,
+      lastOptimalHeight: optimalData[11].optimal,
+      lastPoorHeight: poorData[11].height,
+      baseGrowthRate,
+    };
+  };
+
+  const growthData = generateGrowthData();
 
   // 종식별 - 파일 처리
   const processIdentifyFile = (f) => {
@@ -99,7 +123,6 @@ export default function CareChat() {
     if (!identifyFile) {
       toast({
         title: '이미지를 선택해주세요',
-        description: '식별할 식물 이미지를 업로드해야 합니다.',
         variant: 'destructive',
       });
       return;
@@ -119,20 +142,17 @@ export default function CareChat() {
           timestamp: new Date().toISOString(),
         };
         
-        // 로컬스토리지에 저장
         localStorage.setItem('latest-plant-identification', JSON.stringify(savedData));
         setIdentifyResult(savedData);
         setShowIdentify(false);
 
         toast({
           title: '식별 완료!',
-          description: data.message || `${data.identification.plant_name} 식별 완료`,
-          variant: 'default',
+          description: `${data.identification.plant_name} 식별 완료`,
         });
       } else {
         toast({
           title: '식별 실패',
-          description: data.message || '식물을 식별할 수 없습니다.',
           variant: 'destructive',
         });
       }
@@ -165,110 +185,27 @@ export default function CareChat() {
     localStorage.removeItem('latest-plant-identification');
   };
 
-  // 관리법 상세 보기
-  const handleViewCareDetail = () => {
-    if (identifyResult && identifyResult.identification) {
-      const plantId = identifyResult.identification.plant_name.toLowerCase().replace(/\s+/g, '-');
-      navigate(`/care/${plantId}`, { 
-        state: { 
-          identification: identifyResult.identification,
-          careGuide: identifyResult.careGuide,
-          uploadedImageUrl: identifyResult.uploadedImageUrl
-        } 
-      });
-    }
+  // 우리아이로 이동
+  const handleGoToMyChild = () => {
+    navigate('/mychild');
   };
-
-  // 메시지 전송
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!input.trim()) {
-      toast({
-        title: '메시지를 입력해주세요',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // 사용자 메시지 추가
-    const userMessage = {
-      id: Date.now(),
-      role: 'user',
-      content: input.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    // 백엔드 API 호출 시뮬레이션 (나중에 실제 API로 교체)
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        content: `"${input.trim()}"에 대한 답변입니다.\n\n현재 백엔드 개발 중이므로, 실제 AI 응답은 곧 제공됩니다. 🌿\n\n몬스테라의 경우:\n• 물주기: 흙이 마르면 충분히 주세요\n• 햇빛: 간접광이 좋습니다\n• 온도: 18-27°C가 적당합니다\n\n더 궁금한 점이 있으시면 언제든 물어보세요!`,
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  // 예시 질문 클릭
-  const handleExampleClick = (question) => {
-    setInput(question);
-    textareaRef.current?.focus();
-  };
-
-  // 대화 초기화
-  const handleClearChat = () => {
-    if (confirm('모든 대화 내역을 삭제하시겠습니까?')) {
-      setMessages([
-        {
-          id: 1,
-          role: 'assistant',
-          content: '안녕하세요! 🌱 AI 식물 관리 상담사입니다.\n식물 관리에 대해 무엇이든 물어보세요!',
-          timestamp: new Date().toISOString(),
-        }
-      ]);
-      toast({
-        title: '대화 내역이 삭제되었습니다',
-      });
-    }
-  };
-
-  // 자동 스크롤
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // textarea 높이 자동 조절
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  }, [input]);
 
   return (
-    <div className="w-full min-h-[calc(100vh-73px)] flex flex-col bg-emerald-50">
-      <div className="max-w-4xl mx-auto w-full p-4 space-y-6">
+    <div className="w-full min-h-[calc(100vh-73px)] bg-emerald-50 py-12 px-4">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* 헤더 */}
         <motion.header 
-          className="text-center py-6"
+          className="text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-4xl font-bold text-emerald-800 mb-3 flex items-center justify-center gap-2">
-            <Sparkles className="w-8 h-8 text-emerald-500" />
-            식물 관리법
+            <TrendingUp className="w-8 h-8 text-emerald-500" />
+            식물 성장도
           </h1>
           <p className="text-lg text-emerald-600">
-            식물을 식별하고 AI 상담을 통해 관리법을 알아보세요
+            식물을 식별하고 성장 예측 그래프를 확인하세요
           </p>
         </motion.header>
 
@@ -308,17 +245,10 @@ export default function CareChat() {
                       {identifyResult.identification.plant_name}
                     </h3>
                     {identifyResult.identification.scientific_name && (
-                      <p className="text-emerald-600 italic mb-3">
+                      <p className="text-emerald-600 italic">
                         {identifyResult.identification.scientific_name}
                       </p>
                     )}
-                    <Button
-                      onClick={handleViewCareDetail}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
-                    >
-                      상세 관리법 보기
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -337,15 +267,13 @@ export default function CareChat() {
               <CardHeader>
                 <CardTitle className="text-emerald-800">식물 종 식별</CardTitle>
                 <p className="text-sm text-emerald-600">
-                  먼저 관리할 식물을 식별해주세요
+                  먼저 식물을 식별해주세요
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* 이미지 업로드 영역 */}
                 {!identifyPreview ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      {/* 갤러리에서 선택 */}
                       <div>
                         <input
                           ref={fileInputRef}
@@ -353,10 +281,10 @@ export default function CareChat() {
                           accept="image/*"
                           onChange={(e) => processIdentifyFile(e.target.files?.[0])}
                           className="hidden"
-                          id="gallery-upload"
+                          id="gallery-upload-growth"
                         />
                         <label
-                          htmlFor="gallery-upload"
+                          htmlFor="gallery-upload-growth"
                           className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition h-40"
                         >
                           <ImageIcon className="w-12 h-12 text-emerald-500 mb-2" />
@@ -366,7 +294,6 @@ export default function CareChat() {
                         </label>
                       </div>
 
-                      {/* 카메라로 촬영 */}
                       <div>
                         <input
                           ref={cameraInputRef}
@@ -375,10 +302,10 @@ export default function CareChat() {
                           capture="environment"
                           onChange={(e) => processIdentifyFile(e.target.files?.[0])}
                           className="hidden"
-                          id="camera-upload"
+                          id="camera-upload-growth"
                         />
                         <label
-                          htmlFor="camera-upload"
+                          htmlFor="camera-upload-growth"
                           className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-emerald-300 rounded-xl hover:bg-emerald-50 cursor-pointer transition h-40"
                         >
                           <Camera className="w-12 h-12 text-emerald-500 mb-2" />
@@ -389,7 +316,6 @@ export default function CareChat() {
                       </div>
                     </div>
 
-                    {/* 텍스트로 입력 */}
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-emerald-700">
                         또는 식물 이름을 직접 입력하세요
@@ -399,7 +325,6 @@ export default function CareChat() {
                         className="rounded-lg border-emerald-200"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && e.target.value.trim()) {
-                            // 텍스트 입력으로 임시 데이터 생성
                             const plantName = e.target.value.trim();
                             const tempData = {
                               identification: {
@@ -427,7 +352,6 @@ export default function CareChat() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* 미리보기 */}
                     <div
                       className="w-full aspect-video rounded-xl border-2 border-emerald-200"
                       style={{
@@ -469,138 +393,189 @@ export default function CareChat() {
           </motion.div>
         )}
 
-        {/* AI 상담 채팅 (종식별 완료 후에만 표시) */}
-        {identifyResult && !showIdentify && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Card className="rounded-2xl shadow-lg border-emerald-200">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-emerald-800">AI 관리 상담</CardTitle>
-                  {messages.length > 1 && (
-                    <Button
-                      onClick={handleClearChat}
-                      variant="outline"
-                      size="sm"
-                      className="border-red-300 text-red-600 hover:bg-red-50 rounded-lg"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      초기화
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* 메시지 영역 */}
-                <div className="h-[400px] overflow-y-auto px-2 py-4 space-y-4 mb-4">
-                  <AnimatePresence>
-                    {messages.map((message, index) => (
-                      <motion.div
-                        key={message.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div className={`flex gap-2 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                            message.role === 'user' 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-white border-2 border-emerald-300 text-emerald-600'
-                          }`}>
-                            {message.role === 'user' ? (
-                              <User className="w-4 h-4" />
-                            ) : (
-                              <Bot className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div className={`px-4 py-2 rounded-lg ${
-                            message.role === 'user'
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-50 text-emerald-900'
-                          }`}>
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  {isLoading && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex justify-start"
-                    >
-                      <div className="flex gap-2 max-w-[80%]">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white border-2 border-emerald-300 text-emerald-600">
-                          <Bot className="w-4 h-4" />
-                        </div>
-                        <div className="px-4 py-2 rounded-lg bg-emerald-50">
-                          <div className="flex items-center gap-2 text-emerald-600">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span className="text-sm">답변 생성 중...</span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* 예시 질문 */}
-                {messages.length === 1 && (
-                  <div className="mb-4">
-                    <p className="text-sm text-emerald-700 font-medium mb-2">💡 이런 질문을 해보세요:</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {exampleQuestions.slice(0, 4).map((question, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleExampleClick(question)}
-                          className="text-left px-3 py-2 bg-white hover:bg-emerald-50 border border-emerald-200 hover:border-emerald-400 rounded-lg text-xs text-emerald-700 transition"
-                        >
-                          {question}
-                        </button>
-                      ))}
+        {/* 성장 그래프 (종식별 완료 후에만 표시) */}
+        {identifyResult && !showIdentify && growthData && (
+          <>
+            {/* 임시 데이터 안내 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Card className="rounded-xl shadow-md border-blue-200 bg-blue-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-blue-800 font-medium mb-1">
+                        임시 데이터 표시 중
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        백엔드 개발 중이므로 임시 성장 데이터를 표시합니다. 실제 데이터는 곧 제공될 예정입니다.
+                      </p>
                     </div>
                   </div>
-                )}
+                </CardContent>
+              </Card>
+            </motion.div>
 
-                {/* 입력 영역 */}
-                <form onSubmit={handleSubmit} className="flex gap-2">
-                  <Textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit(e);
-                      }
-                    }}
-                    placeholder="식물 관리에 대해 질문해보세요..."
-                    className="flex-1 min-h-[60px] max-h-[120px] resize-none rounded-lg border-emerald-200"
-                    disabled={isLoading}
-                    rows={1}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={isLoading || !input.trim()}
-                    className="self-end bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
+            {/* 비교 그래프 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <Card className="rounded-2xl shadow-lg border-emerald-200">
+                <CardHeader>
+                  <CardTitle className="text-emerald-800">
+                    12개월 성장 비교 그래프
+                  </CardTitle>
+                  <p className="text-sm text-emerald-600">
+                    최적 관리 vs 부족한 관리
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={growthData.optimalData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" />
+                        <XAxis 
+                          dataKey="month" 
+                          stroke="#047857"
+                          style={{ fontSize: '12px' }}
+                        />
+                        <YAxis 
+                          stroke="#047857"
+                          style={{ fontSize: '12px' }}
+                          label={{ value: '높이 (cm)', angle: -90, position: 'insideLeft', style: { fill: '#047857' } }}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: '#f0fdf4', 
+                            border: '1px solid #86efac',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="optimal" 
+                          stroke="#10b981" 
+                          strokeWidth={3}
+                          name="최적 관리" 
+                          dot={{ fill: '#10b981', r: 5 }}
+                          activeDot={{ r: 7 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="poor" 
+                          stroke="#f59e0b" 
+                          strokeWidth={3}
+                          strokeDasharray="5 5"
+                          name="부족한 관리" 
+                          dot={{ fill: '#f59e0b', r: 5 }}
+                          activeDot={{ r: 7 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* 그래프 설명 */}
+                  <div className="mt-6 grid md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-emerald-50 rounded-xl border-2 border-emerald-200">
+                      <h4 className="font-bold text-emerald-800 mb-2 flex items-center gap-2">
+                        <div className="w-4 h-4 bg-emerald-500 rounded-full"></div>
+                        최적 관리 (12개월 후: {growthData.lastOptimalHeight}cm)
+                      </h4>
+                      <ul className="text-sm text-emerald-700 space-y-1">
+                        <li>• 적절한 물 공급</li>
+                        <li>• 충분한 햇빛</li>
+                        <li>• 정기적인 비료</li>
+                        <li>• 병충해 예방</li>
+                      </ul>
+                    </div>
+                    <div className="p-4 bg-amber-50 rounded-xl border-2 border-amber-200">
+                      <h4 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                        <div className="w-4 h-4 bg-amber-500 rounded-full"></div>
+                        부족한 관리 (12개월 후: {growthData.lastPoorHeight}cm)
+                      </h4>
+                      <ul className="text-sm text-amber-700 space-y-1">
+                        <li>• 불규칙한 물주기</li>
+                        <li>• 햇빛 부족</li>
+                        <li>• 비료 미흡</li>
+                        <li>• 관리 소홀</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* 케어 팁 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Card className="rounded-2xl shadow-lg border-emerald-200">
+                <CardHeader>
+                  <CardTitle className="text-emerald-800">
+                    {growthData.plantName} 성장 관리 팁
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-emerald-50 rounded-xl">
+                      <h4 className="font-bold text-emerald-800 mb-2">💧 물주기</h4>
+                      <p className="text-sm text-emerald-700">
+                        흙의 상태를 확인하여 표면이 마르면 충분히 물을 주세요. 
+                        과습은 뿌리 썩음의 원인이 되므로 주의하세요.
+                      </p>
+                    </div>
+                    <div className="p-4 bg-emerald-50 rounded-xl">
+                      <h4 className="font-bold text-emerald-800 mb-2">☀️ 햇빛</h4>
+                      <p className="text-sm text-emerald-700">
+                        간접광이 잘 드는 곳에 배치하세요. 
+                        직사광선은 잎을 태울 수 있으니 피하는 것이 좋습니다.
+                      </p>
+                    </div>
+                    <div className="p-4 bg-emerald-50 rounded-xl">
+                      <h4 className="font-bold text-emerald-800 mb-2">🌡️ 온도</h4>
+                      <p className="text-sm text-emerald-700">
+                        18-27°C 사이가 적당합니다. 
+                        급격한 온도 변화는 식물에게 스트레스를 줄 수 있습니다.
+                      </p>
+                    </div>
+                    <div className="p-4 bg-emerald-50 rounded-xl">
+                      <h4 className="font-bold text-emerald-800 mb-2">🌱 비료</h4>
+                      <p className="text-sm text-emerald-700">
+                        성장기(봄-여름)에는 2주에 한 번, 휴면기(가을-겨울)에는 한 달에 한 번 액체비료를 주세요.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* 우리아이로 이동 버튼 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="flex justify-center"
+            >
+              <Button
+                onClick={handleGoToMyChild}
+                className="px-8 py-6 text-lg font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg"
+              >
+                우리아이에서 관리 계획 세우기
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </motion.div>
+          </>
         )}
       </div>
     </div>
   );
 }
+
