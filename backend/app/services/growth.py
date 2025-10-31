@@ -12,8 +12,8 @@ from app.models.schemas import (
     PeriodAnalysis,
     PlantIdentification,
 )
-from app.services.guide import load_text_generator
-from app.services.db_utils import load_identification_data
+# koGPT2 모델 사용 중지 - Qwen 모델 사용
+# from app.services.guide import load_text_generatorfrom app.services.db_utils import load_identification_data
 from app.services.textgen_adapter import render_plant_analysis
 import math
 import hashlib
@@ -505,7 +505,8 @@ def generate_growth_inference_text(plant_name: str) -> str:
     LLM(가능 시 transformers 로컬 모델)로 한국어 생장 추론 종합 텍스트 생성.
     모델 로딩 실패 시 템플릿 기반 메시지를 반환.
     """
-    tokenizer, model = load_text_generator()
+# koGPT2 모델 사용 중지 - Qwen 모델 사용 (textgen_adapter.py의 render_plant_analysis)
+    tokenizer, model = None, None   
     prompt = (
         f"다음 식물의 6개월 성장 전망을 한국어로 3-5문장으로 요약해줘.\n"
         f"식물: {plant_name}\n"
@@ -751,6 +752,7 @@ def generate_monthly_data_analysis(
     
     return {
         "identification": identification,
+        "growth_graph": growth_graph,  # 차트 데이터 포함
         "monthly_data": monthly_rows,
         "comprehensive_analysis": comprehensive_analysis
     }
@@ -782,8 +784,9 @@ def generate_period_llm_analysis(
     Returns:
         LLM 기반 종합 분석 텍스트
     """
-    tokenizer, model = load_text_generator()
-    
+ # koGPT2 모델 사용 중지 - Qwen 모델 사용 (textgen_adapter.py의 render_plant_analysis)
+    tokenizer, model = None, None
+        
     # 식물종 정보 구성
     plant_info = f"식물명: {plant_name}"
     if identification:

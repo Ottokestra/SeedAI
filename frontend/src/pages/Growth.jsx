@@ -24,8 +24,16 @@ export default function Growth() {
   // ---------- 응답 매핑 ----------
   const g = payload?.growth_graph || null;
   const periodUnit = g?.period_unit === "week" ? "W" : "M";
+ 
+ // 디버깅: payload 확인
+  console.log("[Growth] payload:", payload);
+  console.log("[Growth] growth_graph:", g);
+ 
   const chartRows = useMemo(() => {
     if (!g || !g.good_growth || !Array.isArray(g.good_growth) || g.good_growth.length === 0) {
+            console.warn("[Growth] 차트 데이터 없음:", { g, hasGoodGrowth: !!g?.good_growth, goodGrowthLength: g?.good_growth?.length });
+
+
       return [];
     }
     

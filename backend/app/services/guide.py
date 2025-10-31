@@ -9,33 +9,15 @@ _tokenizer = None
 
 
 def load_text_generator():
-    """텍스트 생성 모델을 로드합니다 (처음 한 번만 로드)"""
-    global _text_model, _tokenizer
-    
-    if _text_model is None:
-        print(f"텍스트 생성 모델 로딩 중: {settings.text_generation_model}")
-        try:
-            _tokenizer = AutoTokenizer.from_pretrained(
-                settings.text_generation_model,
-                cache_dir=settings.cache_dir,
-                token=settings.huggingface_token
-            )
-            _text_model = AutoModelForCausalLM.from_pretrained(
-                settings.text_generation_model,
-                cache_dir=settings.cache_dir,
-                token=settings.huggingface_token
-            )
-            # GPU가 있으면 사용
-            if torch.cuda.is_available():
-                _text_model = _text_model.cuda()
-            _text_model.eval()
-            print("텍스트 모델 로딩 완료!")
-        except Exception as e:
-            print(f"텍스트 모델 로딩 실패: {e}")
-            # 모델 로딩 실패 시 None으로 유지
-            pass
-    
-    return _tokenizer, _text_model
+    """
+    텍스트 생성 모델 로더 (비활성화됨)
+    Qwen 모델을 사용하므로 koGPT2는 로드하지 않습니다.
+    textgen_adapter.py의 render_plant_analysis를 사용하세요.
+    """
+    # koGPT2 모델 로딩 비활성화 - Qwen 모델 사용
+    print(f"[guide] 텍스트 생성 모델 로딩 비활성화됨 (Qwen 모델 사용)")
+    return None, None
+
 
 
 def generate_care_guide(plant_name: str) -> CareGuide:

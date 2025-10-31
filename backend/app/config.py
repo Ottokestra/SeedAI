@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     
     # Hugging Face 모델 설정
     plant_classifier_model: str = "umutbozdag/plant-identity"  # 식물 전문 모델 (20종)
-    text_generation_model: str = "skt/kogpt2-base-v2"  # 한국어 최적화 모델 (GPT-2 대신 사용)
+    text_generation_model: str = "none"  # koGPT2 비활성화 - Qwen 모델 사용 (textgen_adapter.py)
     image_generation_model: str = "stabilityai/sd-turbo"
     
     # 선택적 Hugging Face 토큰 (rate limit 완화용)
