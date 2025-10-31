@@ -121,7 +121,6 @@ def classify_plant(image: bytes) -> PlantIdentification:
             return PlantIdentification(
                 plant_name=plant_name,
                 scientific_name=plant_name_en,  # 영어 이름을 scientific_name으로 저장
-                scientific_name=None,
                 confidence=confidence,
                 common_names=common_names
             )

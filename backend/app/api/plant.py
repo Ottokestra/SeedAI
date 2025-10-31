@@ -1,11 +1,29 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Body
 from fastapi.responses import JSONResponse
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-from app.models.schemas import PlantAnalysisResponse, PlantIdentification
-from app.services import classify_plant, classify_plant_with_plantrecog, classify_plant_multi_model, classify_plant_multi_model_kr, classify_plant_auto_select, classify_plant_auto_select_kr, generate_care_guide, generate_growth_prediction
+from app.models.schemas import (
+    PlantAnalysisResponse,
+    PlantIdentification,
+    PlantGrowthInsightResponse,
+    MonthlyDataRow,
+    MonthlyDataAnalysis,
+)
+from app.services import (
+    classify_plant,
+    classify_plant_with_plantrecog,
+    classify_plant_multi_model,
+    classify_plant_multi_model_kr,
+    classify_plant_auto_select,
+    classify_plant_auto_select_kr,
+    generate_care_guide,
+    generate_growth_prediction,
+)
+from app.services.growth import generate_growth_graph, generate_monthly_data_analysis
+from app.services.textgen_adapter import render_plant_analysis
+from app.services.db_utils import save_identification_data, save_growth_log, load_growth_history
 
 router = APIRouter()
 
