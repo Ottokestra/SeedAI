@@ -115,6 +115,7 @@ class DiseaseDetectionResponse(BaseModel):
 class MonthlyDataAnalysis(BaseModel):
     """월별 데이터 분석"""
     identification: PlantIdentification = Field(..., description="식물 식별 결과")
+    growth_graph: GrowthGraph = Field(..., description="성장 예측 그래프")
     monthly_data: List[MonthlyDataRow] = Field(..., description="월별 데이터 전체 테이블")
     comprehensive_analysis: str = Field(..., description="AI 종합 분석 및 조언 (1-3개월, 4-6개월, 7-12개월 주기별 설명)")
     success: bool = True

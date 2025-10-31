@@ -14,8 +14,8 @@ from app.models.schemas import (
     PeriodAnalysis,
     PlantIdentification,
 )
-from app.services.guide import load_text_generator
-from app.services.db_utils import load_identification_data
+# koGPT2 모델 사용 중지 - Qwen 모델 사용
+# from app.services.guide import load_text_generatorfrom app.services.db_utils import load_identification_data
 from app.services.textgen_adapter import render_plant_analysis
 import math
 import hashlib
@@ -131,7 +131,7 @@ def get_default_growth_prediction(plant_name: str) -> GrowthPrediction:
         "11개월": "완전히 성장한 모습으로 장기 관리가 필요한 시기입니다.",
         "12개월": f"완전히 성장한 {plant_name}의 최종 모습입니다."
     }
-
+    
     for i in range(13):  # 0부터 12까지 (13개)
         if i == 0:
             timeframe = "현재"
@@ -139,14 +139,14 @@ def get_default_growth_prediction(plant_name: str) -> GrowthPrediction:
         else:
             timeframe = f"{i}개월"
             stage = f"{i}_months"
-
+        
         stages.append(GrowthStage(
             stage=stage,
             timeframe=timeframe,
             image_url=None,
             description=descriptions.get(timeframe, f"{plant_name}가 건강하게 성장하고 있습니다.")
         ))
-
+    
     return GrowthPrediction(stages=stages)
 
 
@@ -161,26 +161,26 @@ def _seed_from_name(plant_name: str) -> float:
 def get_plant_size_range(plant_name: str, identification: Optional[PlantIdentification] = None) -> Tuple[float, float]:
     """
     식물 이름 및 종분석 데이터 기반으로 초기 크기와 최대 크기 범위를 반환합니다.
-
+    
     Args:
         plant_name: 식물 이름
         identification: 식물 종분석 데이터 (선택사항, Y축 범위 계산에 활용)
-
+        
     Returns:
         (초기_크기, 최대_크기) 튜플 (cm 단위)
     """
     seed = _seed_from_name(plant_name)
-
+    
     # 식물 유형별 기본 크기 범위 (cm)
     # 소형 식물: 5-30cm, 중형 식물: 10-60cm, 대형 식물: 20-150cm
     plant_type_seed = int(seed * 1000) % 3
-
+    
     # 종분석 데이터가 제공되면 신뢰도를 고려하여 범위 조정
     confidence_factor = 1.0
     if identification is not None:
         # 신뢰도가 높을수록 더 정확한 범위 예측
         confidence_factor = 0.8 + (identification.confidence * 0.2)  # 0.8 ~ 1.0 사이
-
+    
     if plant_type_seed == 0:  # 소형 식물
         initial_size = (5.0 + seed * 5.0) * confidence_factor  # 5-10cm (조정)
         max_size = (20.0 + seed * 10.0) * confidence_factor     # 20-30cm (조정)
@@ -190,11 +190,11 @@ def get_plant_size_range(plant_name: str, identification: Optional[PlantIdentifi
     else:  # 대형 식물
         initial_size = (15.0 + seed * 10.0) * confidence_factor  # 15-25cm (조정)
         max_size = (80.0 + seed * 70.0) * confidence_factor      # 80-150cm (조정)
-
+    
     # 최소값 보장
     initial_size = max(3.0, initial_size)
     max_size = max(initial_size * 2, max_size)
-
+    
     return round(initial_size, 1), round(max_size, 1)
 
 
@@ -202,22 +202,22 @@ def generate_growth_graph(plant_name: str, period_unit: str = "month", max_perio
     """
     종분석 데이터를 기반으로 성장 예측 그래프를 생성합니다.
     좋은 생장/나쁜 생장 지표 2개를 생성합니다.
-
+    
     Args:
         plant_name: 식물 이름
         period_unit: 기간 단위 ('week' 또는 'month')
         max_periods: 최대 기간 수 (주 또는 월)
         identification: 식물 종분석 데이터 (Y축 범위 계산에 사용)
-
+        
     Returns:
         GrowthGraph: 좋은/나쁜 생장 그래프 포함
     """
     seed = _seed_from_name(plant_name)
-
+    
     # 종분석 데이터(identification)를 활용하여 Y축 범위 계산
     # identification이 제공되면 신뢰도를 반영한 더 정확한 범위 계산
     initial_size, max_size = get_plant_size_range(plant_name, identification)
-
+    
     # 기간별 데이터 포인트 생성
     if period_unit == "week":
         periods = list(range(0, max_periods + 1, max(1, max_periods // 12)))  # 최대 12개 포인트
@@ -225,20 +225,20 @@ def generate_growth_graph(plant_name: str, period_unit: str = "month", max_perio
             periods.append(max_periods)
     else:  # month
         periods = list(range(0, max_periods + 1))
-
+    
     def generate_growth_curve(periods_list: List[int], growth_rate_multiplier: float) -> List[GrowthGraphPoint]:
         """
         성장 곡선을 생성합니다.
-
+        
         Args:
             periods_list: 기간 리스트
             growth_rate_multiplier: 성장률 배수 (1.0 = 예상, 1.3 = 좋은 생장, 0.7 = 나쁜 생장)
-
+            
         Returns:
             GrowthGraphPoint 리스트
         """
         points = []
-
+        
         for period in periods_list:
             # 로지스틱 곡선 기반 성장 계산
             # k: 성장 속도 (period_unit에 따라 조정)
@@ -250,38 +250,38 @@ def generate_growth_graph(plant_name: str, period_unit: str = "month", max_perio
                 k = (0.35 + 0.2 * seed) * growth_rate_multiplier  # 월별 성장률
                 x0 = (3.0 - 1.5 * seed) * growth_rate_multiplier  # 전환점 (월)
                 normalized_period = period
-
+            
             # 로지스틱 함수로 성장 지수 계산 (0-1)
             growth_index = 1.0 / (1.0 + math.exp(-k * (normalized_period - x0)))
-
+            
             # 초기 크기에서 최대 크기로 변환
             current_size = initial_size + (max_size - initial_size) * growth_index
-
+            
             # 작은 변동 추가 (자연스러운 성장 곡선)
             variation = (seed * 0.1 - 0.05) * current_size
             current_size += variation
-
+            
             # 크기는 최소 초기 크기 이상, 최대 크기 이하로 제한
             current_size = max(initial_size * 0.8, min(current_size, max_size * 1.1))
-
+            
             points.append(GrowthGraphPoint(
                 period=period,
                 size=round(current_size, 1)
             ))
-
+        
         return points
-
+    
     # 2가지 성장 곡선 생성 (좋은/나쁜 조건만)
     good_growth = generate_growth_curve(periods, 1.3)  # 좋은 생장 (30% 빠른 성장)
     bad_growth = generate_growth_curve(periods, 0.7)  # 나쁜 생장 (30% 느린 성장)
-
+    
     # 월별 상세 분석 생성 (identification 전달)
     period_analyses = generate_period_analyses(plant_name, periods, period_unit, good_growth, bad_growth, identification)
-
+    
     # Y축 범위 계산 (발아단계부터 최대 크기까지, 약간의 여유 공간 추가)
     y_min = max(0, initial_size * 0.9)  # 발아단계 크기의 90% (여유 공간)
     y_max = max_size * 1.1  # 최대 크기의 110% (여유 공간)
-
+    
     return GrowthGraph(
         good_growth=good_growth,
         bad_growth=bad_growth,
@@ -310,30 +310,30 @@ def generate_period_analyses(
 ) -> List[PeriodAnalysis]:
     """
     각 기간별 상세 분석 텍스트를 생성합니다.
-
+    
     Args:
         plant_name: 식물 이름
         periods: 기간 리스트
         period_unit: 기간 단위 ('week' 또는 'month')
         good_growth: 좋은 생장 그래프 포인트
         bad_growth: 나쁜 생장 그래프 포인트
-
+        
     Returns:
         PeriodAnalysis 리스트
     """
     analyses = []
-
+    
     # 기간 단위에 따른 라벨
     unit_label = "주" if period_unit == "week" else "개월"
-
+    
     for i, period in enumerate(periods):
         if i >= len(good_growth) or i >= len(bad_growth):
             continue
-
+            
         good_size = good_growth[i].size
         bad_size = bad_growth[i].size
         size_diff = good_size - bad_size
-
+        
         # 기간별 단계 분류
         if period == 0:
             stage = "초기"
@@ -347,28 +347,28 @@ def generate_period_analyses(
         else:
             stage = "후기 성장"
             growth_rate_desc = "성숙 단계"
-
+        
         # 좋은 조건 분석
         good_analysis = generate_good_condition_analysis(
             plant_name, period, unit_label, stage, good_size, size_diff
         )
-
+        
         # 나쁜 조건 설명
         bad_description = generate_bad_condition_description(
             plant_name, period, unit_label, stage, bad_size
         )
-
+        
         # 나쁜 조건 영향
         bad_impact = generate_bad_condition_impact(
             plant_name, period, unit_label, stage, bad_size, size_diff
         )
-
+        
         # LLM 기반 전체 설명 생성 (식물종 분석 + 그래프 데이터 종합)
         llm_analysis = generate_period_llm_analysis(
-            plant_name, period, unit_label, stage, good_size, bad_size,
+            plant_name, period, unit_label, stage, good_size, bad_size, 
             size_diff, identification
         )
-
+        
         analyses.append(PeriodAnalysis(
             period=period,
             good_condition_analysis=good_analysis,
@@ -377,7 +377,7 @@ def generate_period_analyses(
             llm_comprehensive_analysis=llm_analysis,
             layout_type="split"  # 좌우 분할 레이아웃
         ))
-
+    
     return analyses
 
 
@@ -390,7 +390,7 @@ def generate_good_condition_analysis(
     size_diff: float
 ) -> str:
     """좋은 조건으로 생장했을 때의 상세 분석 및 조언"""
-
+    
     if period == 0:
         return (
             f"{plant_name}이(가) 최적의 환경에서 초기 적응을 잘 하고 있습니다. "
@@ -433,7 +433,7 @@ def generate_bad_condition_description(
     bad_size: float
 ) -> str:
     """나쁜 조건 설명"""
-
+    
     conditions = [
         "불충분한 빛 노출 (어둡거나 부족한 햇빛)",
         "과습 또는 건조 (일정하지 않은 물주기)",
@@ -443,16 +443,16 @@ def generate_bad_condition_description(
         "불충분한 통풍 (밀폐된 공간)",
         "부적절한 화분 크기 (뿌리 발달 제한)"
     ]
-
+    
     if period <= 3:
         primary_issues = conditions[:3]  # 초기에는 빛, 물, 온도가 중요
     elif period <= 6:
         primary_issues = conditions[:5]  # 중기에는 영양분도 중요
     else:
         primary_issues = conditions  # 후기에는 모든 요소 중요
-
+    
     issues_text = ", ".join(primary_issues)
-
+    
     return (
         f"{period}{unit_label} 시점에서 {plant_name}이(가) 나쁜 조건에 노출되어 있습니다. "
         f"주요 문제점: {issues_text}. "
@@ -470,7 +470,7 @@ def generate_bad_condition_impact(
     size_diff: float
 ) -> str:
     """나쁜 조건으로 생장 시 식물 상태 및 수명 예상"""
-
+    
     if period == 0:
         return (
             f"초기 적응 단계에서 나쁜 조건이 지속되면 {plant_name}의 뿌리 발달이 지연되고, "
@@ -507,7 +507,8 @@ def generate_growth_inference_text(plant_name: str) -> str:
     LLM(가능 시 transformers 로컬 모델)로 한국어 생장 추론 종합 텍스트 생성.
     모델 로딩 실패 시 템플릿 기반 메시지를 반환.
     """
-    tokenizer, model = load_text_generator()
+# koGPT2 모델 사용 중지 - Qwen 모델 사용 (textgen_adapter.py의 render_plant_analysis)
+    tokenizer, model = None, None
     prompt = (
         f"다음 식물의 6개월 성장 전망을 한국어로 3-5문장으로 요약해줘.\n"
         f"식물: {plant_name}\n"
@@ -564,7 +565,7 @@ def generate_comprehensive_monthly_analysis(
     period_1_3 = [d for d in monthly_data if 0 <= d.get("period", 0) <= 3]
     period_4_6 = [d for d in monthly_data if 4 <= d.get("period", 0) <= 6]
     period_7_12 = [d for d in monthly_data if 7 <= d.get("period", 0) <= 12]
-
+    
     # 템플릿 직접 사용 (가장 빠름)
     return generate_comprehensive_monthly_analysis_template(
         plant_name, period_1_3, period_4_6, period_7_12, identification
@@ -579,12 +580,12 @@ def generate_comprehensive_monthly_analysis_template(
     identification: Optional[PlantIdentification] = None
 ) -> str:
     """템플릿 기반 주기별 종합 분석 생성"""
-
+    
     # 식물명 가져오기
     display_name = plant_name
     if identification:
         display_name = identification.plant_name if hasattr(identification, 'plant_name') else plant_name
-
+    
     # 1-3개월 분석
     period_1_3_text = ""
     if period_1_3:
@@ -598,7 +599,7 @@ def generate_comprehensive_monthly_analysis_template(
             f"새로운 잎이 정기적으로 나오고 뿌리 시스템이 발달하는 중요한 시기입니다. "
             f"밝은 간접광과 과습을 피한 물주기(토양 표면이 마를 때), 18-24°C의 온도와 40-60% 습도를 유지하는 것이 중요합니다."
         )
-
+    
     # 4-6개월 분석
     period_4_6_text = ""
     if period_4_6:
@@ -612,7 +613,7 @@ def generate_comprehensive_monthly_analysis_template(
             f"풍성한 잎과 강건한 줄기가 특징이며, 정기적인 가지치기로 더욱 건강한 형태를 유지할 수 있습니다. "
             f"성장기에 맞춰 월 1-2회 액체 비료를 주고, 수분 공급을 일정하게 유지하며, 계절에 따라 온도와 습도를 조절해주세요."
         )
-
+    
     # 7-12개월 분석
     period_7_12_text = ""
     if period_7_12:
@@ -627,14 +628,14 @@ def generate_comprehensive_monthly_analysis_template(
             f"성장 속도가 둔화되므로 물주기 빈도를 조절하고, 겨울철에는 휴면기를 고려하여 관리하세요. "
             f"잎을 정기적으로 닦아 광합성 효율을 높이고, 병해충을 조기에 발견하여 대응하는 것이 중요합니다."
         )
-
+    
     # 종합 조언
     comprehensive_tip = (
         f"\n\n최적의 생장을 위해서는 충분한 간접광, 적절한 물주기, 적정 온습도를 유지하는 것이 중요합니다. "
         f"피해야 할 조건으로는 직사광선, 과습/건조, 온도 급변, 통풍 부족이 있으며, "
         f"이러한 조건이 지속되면 성장이 지연될 수 있습니다."
     )
-
+    
     return f"식물 {display_name}의 생장 예측에 대한 종합 분석입니다.\n\n{period_1_3_text}\n\n{period_4_6_text}\n\n{period_7_12_text}{comprehensive_tip}"
 
 
@@ -646,22 +647,22 @@ def generate_monthly_data_analysis(
     """
     저장된 식물 데이터를 기반으로 월별 데이터 분석을 생성합니다.
     로컬에 저장된 식물 분석 데이터를 로드하여 사용합니다.
-
+    
     Args:
         plant_name: 식물 이름
         max_months: 최대 월 수 (기본값: 12)
         data_id: 저장된 데이터 ID (선택사항)
-
+        
     Returns:
         월별 데이터 분석 결과 (dict)
     """
     import time
     start_time = time.time()
-
+    
     # 저장된 식물 분석 데이터 로드
     saved_data = load_identification_data(data_id=data_id, plant_name=plant_name)
     print(f"[월별 분석] 데이터 로드 완료: {time.time() - start_time:.2f}초")
-
+    
     if saved_data:
         identification_dict = saved_data.get("identification", {})
         identification = PlantIdentification(
@@ -678,7 +679,7 @@ def generate_monthly_data_analysis(
             confidence=0.5,
             common_names=[]
         )
-
+    
     # 성장 그래프 생성 (저장된 데이터 기반)
     growth_graph = generate_growth_graph(
         plant_name=identification.plant_name,
@@ -686,31 +687,31 @@ def generate_monthly_data_analysis(
         max_periods=max_months,
         identification=identification
     )
-
+    
     # 월별 데이터 행 생성
     monthly_rows = []
     monthly_data_list = []
-
+    
     # good_growth와 bad_growth의 평균을 expected_growth로 사용
     for i in range(len(growth_graph.good_growth)):
         good_point = growth_graph.good_growth[i]
         bad_point = growth_graph.bad_growth[i] if i < len(growth_graph.bad_growth) else good_point
-
+        
         period = good_point.period
-
+        
         # period에 따라 기간 라벨 결정
         if period == 0:
             period_label = "현재"
         else:
             period_label = f"{period}개월"
-
+        
         # 좋은 조건과 나쁜 조건 크기 가져오기
         good_height = good_point.size
         bad_height = bad_point.size
-
+        
         # 예상 크기 = 좋은 조건과 나쁜 조건의 평균
         expected_height = (good_height + bad_height) / 2
-
+        
         # 월별 데이터 추가
         monthly_rows.append({
             "period": period_label,
@@ -718,7 +719,7 @@ def generate_monthly_data_analysis(
             "good_condition_height": round(good_height, 1),
             "bad_condition_height": round(bad_height, 1)
         })
-
+        
         # 종합 분석을 위한 데이터 리스트
         monthly_data_list.append({
             "period": period,
@@ -726,16 +727,16 @@ def generate_monthly_data_analysis(
             "good": good_height,
             "bad": bad_height
         })
-
+    
     # 새 LLM 어댑터로 종합 분석 생성 (로컬 LLM → 실패 시 템플릿 폴백)
     # good_growth와 bad_growth에서 크기 값 추출
     good_series = [d.get("good", 0) for d in monthly_data_list]
     bad_series = [d.get("bad", 0) for d in monthly_data_list]
-
+    
     # 초기 크기 및 최대 크기 추정
     start_cm = good_series[0] if good_series else 15.0
     K = max(good_series) if good_series else 200.0
-
+    
     analysis_start = time.time()
     comprehensive_analysis = render_plant_analysis(
         plant_name=identification.plant_name,
@@ -747,12 +748,13 @@ def generate_monthly_data_analysis(
         bad_series=bad_series
     )
     print(f"[월별 분석] 종합 분석 생성 완료: {time.time() - analysis_start:.2f}초")
-
+    
     total_time = time.time() - start_time
     print(f"[월별 분석] 전체 소요 시간: {total_time:.2f}초")
-
+    
     return {
         "identification": identification,
+        "growth_graph": growth_graph,  # 차트 데이터 포함
         "monthly_data": monthly_rows,
         "comprehensive_analysis": comprehensive_analysis
     }
@@ -770,7 +772,7 @@ def generate_period_llm_analysis(
 ) -> str:
     """
     LLM(무료)을 사용하여 식물종 분석 데이터와 그래프 생장 예상 크기를 종합하여 추론한 설명 및 조언을 생성합니다.
-
+    
     Args:
         plant_name: 식물 이름
         period: 기간
@@ -780,11 +782,12 @@ def generate_period_llm_analysis(
         bad_size: 나쁜 조건 크기
         size_diff: 크기 차이
         identification: 식물 종분석 데이터
-
+        
     Returns:
         LLM 기반 종합 분석 텍스트
     """
-    tokenizer, model = load_text_generator()
+ # koGPT2 모델 사용 중지 - Qwen 모델 사용 (textgen_adapter.py의 render_plant_analysis)
+    tokenizer, model = None, None
 
     # 식물종 정보 구성
     plant_info = f"식물명: {plant_name}"
@@ -793,7 +796,7 @@ def generate_period_llm_analysis(
         plant_info += f"\n신뢰도: {identification.confidence * 100:.1f}%"
         if identification.common_names:
             plant_info += f"\n일반명: {', '.join(identification.common_names[:3])}"
-
+    
     # 그래프 데이터 정보 구성
     graph_info = (
         f"현재 시점부터 {period}{unit_label} 후 예상 생장:\n"
@@ -802,7 +805,7 @@ def generate_period_llm_analysis(
         f"- 성장 단계: {stage}\n"
         f"- 좋은 조건과 나쁜 조건의 차이: {size_diff:.1f}cm"
     )
-
+    
     # LLM 프롬프트 구성
     prompt = (
         f"{plant_info}\n\n{graph_info}\n\n"
@@ -813,16 +816,16 @@ def generate_period_llm_analysis(
         f"4. 피해야 할 생장 조건 및 주의사항\n"
         f"5. 실용적이고 현실적인 조언 (3-5문장으로 간결하게)"
     )
-
+    
     try:
         if tokenizer is None or model is None:
             raise RuntimeError("text model unavailable")
-
+        
         # 경량 생성
         inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
         if torch.cuda.is_available():
             inputs = {k: v.cuda() for k, v in inputs.items()}
-
+        
         with torch.no_grad():
             output_ids = model.generate(
                 **inputs,
@@ -833,16 +836,16 @@ def generate_period_llm_analysis(
                 repetition_penalty=1.2,
                 pad_token_id=tokenizer.eos_token_id,
             )
-
+        
         text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
         # 프롬프트 제거
         if text.startswith(prompt):
             text = text[len(prompt):].strip()
-
+        
         # 너무 짧으면 템플릿 보강
         if len(text) < 50:
             raise RuntimeError("generated text too short")
-
+        
         return text.strip()
     except Exception as e:
         # 템플릿 기반 백업

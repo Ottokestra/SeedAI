@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Download, TrendingUp } from "lucide-react";
 
-// 통합版 Growth
+// 통합 병합본 (main ⨉ dae)
 export default function Growth() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -38,8 +38,7 @@ export default function Growth() {
     const identification = location?.state?.identification || null;
     const growthPrediction = location?.state?.growthPrediction || null;
     const uploadedImageUrl = location?.state?.uploadedImageUrl || null;
-    const originalFile =
-        location?.state?.originalFile || location?.state?.file || null;
+    const originalFile = location?.state?.originalFile || location?.state?.file || null;
     const speciesFromNav =
         location?.state?.identification?.plant_name ||
         location?.state?.species ||
@@ -51,16 +50,23 @@ export default function Growth() {
     // 최초 진입 시 자동 호출 (백엔드 우선)
     useEffect(() => {
         const meta = loadPlantMeta();
-        const startSpecies =
-            speciesFromNav || meta?.plant_name || meta?.scientific_name || null;
-        run({ file: originalFile, species: startSpecies, periods: 12 }).catch(
-            () => {}
-        );
+        const startSpecies = speciesFromNav || meta?.plant_name || meta?.scientific_name || null;
+        run({ file: originalFile, species: startSpecies, periods: 12 }).catch(() => {});
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // 디버깅 로그 (dae 추가사항 반영)
+    useEffect(() => {
+        if (process?.env?.NODE_ENV !== "production") {
+            // eslint-disable-next-line no-console
+            console.log("[Growth] payload:", payload);
+            // eslint-disable-next-line no-console
+            console.log("[Growth] growth_graph:", payload?.growth_graph);
+        }
+    }, [payload]);
+
     /* ------------------------------------------------------------------ */
-    /* 폴백용 임시 데이터 생성 (첫 번째 코드에서 차용)                      */
+    /* 폴백용 임시 데이터 생성                                            */
     /* ------------------------------------------------------------------ */
     const createTempGrowthData = (plantName, plantId) => {
         const baseGrowthRate = 3.5;
@@ -88,7 +94,7 @@ export default function Growth() {
     };
 
     /* ------------------------------------------------------------------ */
-    /* 데이터 매핑 (우선순위: 백엔드 payload > 네비에서 전달된 growthPrediction > 임시/목업) */
+    /* 데이터 매핑 (우선순위: 백엔드 payload > 네비 전달 growthPrediction > 임시/목업) */
     /* ------------------------------------------------------------------ */
     const allPlants = getAllPlants();
 
@@ -102,7 +108,7 @@ export default function Growth() {
         maxValue,
         displayName,
     } = useMemo(() => {
-        // 1) 백엔드 payload 기반 (두 번째 코드의 로직을 그대로 유지/확장)
+        // 1) 백엔드 payload 기반 (dae의 라벨/안전성 보강 로직 포함)
         const g = payload?.growth_graph || null;
 
         if (g && Array.isArray(g.good_growth) && g.good_growth.length > 0) {
@@ -111,16 +117,13 @@ export default function Growth() {
             const rowsFromGraph =
                 g.good_growth
                     .map((p, i) => {
-                        if (
-                            !p ||
-                            typeof p.period === "undefined" ||
-                            typeof p.size === "undefined"
-                        ) {
+                        if (!p || typeof p.period === "undefined" || typeof p.size === "undefined") {
                             return null;
                         }
+
                         let label;
                         if (p.period === 0) label = "현재";
-                        else label = `${periodUnit}${p.period}`;
+                        else label = `${periodUnit}${p.period}`; // Wn 또는 Mn
 
                         const good = typeof p.size === "number" ? p.size : 0;
                         const bad =
@@ -141,38 +144,31 @@ export default function Growth() {
                     })
                     .filter(Boolean) || [];
 
-            // monthly_data 형식도 표로 변환
-            const monthly =
-                (payload?.monthly_data || []).map((row, idx) => {
-                    const period = row.period || (idx === 0 ? "현재" : `${idx}개월`);
-                    const expected = row.expected_height || 0;
-                    const good =
-                        row.good_condition_height ?? row.good ?? (expected || null);
-                    const bad =
-                        row.bad_condition_height ?? row.bad ?? (expected || null);
-                    const typical =
-                        expected ||
-                        (typeof good === "number" && typeof bad === "number"
-                            ? (good + bad) / 2
-                            : good || bad || 0);
-                    return {
-                        label: period,
-                        typical: typeof typical === "number" ? typical : 0,
-                        good: typeof good === "number" ? good : null,
-                        bad: typeof bad === "number" ? bad : null,
-                    };
-                }) || [];
+            // monthly_data 형식도 표로 변환 (dae 보강키 반영)
+            const monthly = (payload?.monthly_data || []).map((row, idx) => {
+                const period = row.period || (idx === 0 ? "현재" : `${idx}개월`);
+                const expected = row.expected_height || 0;
+                const good = row.good_condition_height ?? row.good ?? (expected || null);
+                const bad = row.bad_condition_height ?? row.bad ?? (expected || null);
+                const typical =
+                    expected ||
+                    (typeof good === "number" && typeof bad === "number"
+                        ? (good + bad) / 2
+                        : good || bad || 0);
+                return {
+                    label: period,
+                    typical: typeof typical === "number" ? typical : 0,
+                    good: typeof good === "number" ? good : null,
+                    bad: typeof bad === "number" ? bad : null,
+                };
+            });
 
             const allForMinMax = rowsFromGraph.length ? rowsFromGraph : monthly;
-            const minValue = Math.min(
-                ...allForMinMax.map((r) =>
-                    typeof r.bad === "number" ? r.bad : r.typical ?? 0
-                )
+            const computedMin = Math.min(
+                ...allForMinMax.map((r) => (typeof r.bad === "number" ? r.bad : r.typical ?? 0))
             );
-            const maxValue = Math.max(
-                ...allForMinMax.map((r) =>
-                    typeof r.good === "number" ? r.good : r.typical ?? 0
-                )
+            const computedMax = Math.max(
+                ...allForMinMax.map((r) => (typeof r.good === "number" ? r.good : r.typical ?? 0))
             );
 
             const baseGrowthRate = 3.5; // 표시용 기본값 유지
@@ -186,8 +182,9 @@ export default function Growth() {
                 chartRows: rowsFromGraph,
                 monthlyRows: monthly,
                 analysisText: payload?.comprehensive_analysis || "",
-                minValue: g?.min_size ?? minValue ?? 0,
-                maxValue: g?.max_size ?? maxValue ?? 200,
+                // 서버 제공 min/max가 우선, 없으면 계산값 사용
+                minValue: g?.min_size ?? computedMin ?? 0,
+                maxValue: g?.max_size ?? computedMax ?? 200,
                 summary: {
                     baseGrowthRate,
                     lastHeight: last?.typical ?? 0,
@@ -200,12 +197,8 @@ export default function Growth() {
             };
         }
 
-        // 2) 네비에서 전달된 growthPrediction (첫 번째 코드 호환)
-        if (
-            growthPrediction &&
-            Array.isArray(growthPrediction.stages) &&
-            growthPrediction.stages.length > 0
-        ) {
+        // 2) 네비에서 전달된 growthPrediction (첫 코드 호환)
+        if (growthPrediction && Array.isArray(growthPrediction.stages) && growthPrediction.stages.length > 0) {
             const rows = growthPrediction.stages.map((stage, idx) => {
                 const h = stage.expected_height || 15 + idx * 3.5;
                 return {
@@ -252,21 +245,10 @@ export default function Growth() {
                         bad: d.min,
                     })) || [],
             }
-            : createTempGrowthData(
-                identification?.plant_name || "식물",
-                selectedPlantId || id
-            );
+            : createTempGrowthData(identification?.plant_name || "식물", selectedPlantId || id);
 
-        if (!showTempNotification) {
-            // 토스트는 렌더 후 useEffect에서 처리
-        }
-
-        const minValue = Math.min(
-            ...(temp.rows.length ? temp.rows.map((r) => r.bad ?? r.typical ?? 0) : [0])
-        );
-        const maxValue = Math.max(
-            ...(temp.rows.length ? temp.rows.map((r) => r.good ?? r.typical ?? 0) : [200])
-        );
+        const minValue = Math.min(...(temp.rows.length ? temp.rows.map((r) => r.bad ?? r.typical ?? 0) : [0]));
+        const maxValue = Math.max(...(temp.rows.length ? temp.rows.map((r) => r.good ?? r.typical ?? 0) : [200]));
 
         return {
             isRealData: false,
@@ -283,15 +265,7 @@ export default function Growth() {
             displayName: temp.name || "식물",
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        payload,
-        growthPrediction,
-        identification?.plant_name,
-        identification?.scientific_name,
-        uploadedImageUrl,
-        id,
-        selectedPlantId,
-    ]);
+    }, [payload, growthPrediction, identification?.plant_name, identification?.scientific_name, uploadedImageUrl, id, selectedPlantId]);
 
     // 임시 데이터 사용 안내 토스트 (첫 번째 코드 유지)
     useEffect(() => {
@@ -309,26 +283,14 @@ export default function Growth() {
     async function handleExportPDF() {
         if (!reportRef.current) return;
         try {
-            toast({
-                title: "PDF 생성 중...",
-                description: "잠시만 기다려주세요.",
-                variant: "default",
-            });
+            toast({ title: "PDF 생성 중...", description: "잠시만 기다려주세요.", variant: "default" });
             await exportToPDF(
                 reportRef.current,
                 `${selectedPlantId || displayName}-growth-report.pdf`
             );
-            toast({
-                title: "PDF 저장 완료",
-                description: "성장 예측 리포트가 다운로드되었습니다.",
-                variant: "default",
-            });
+            toast({ title: "PDF 저장 완료", description: "성장 예측 리포트가 다운로드되었습니다.", variant: "default" });
         } catch (error) {
-            toast({
-                title: "PDF 생성 실패",
-                description: "다시 시도해주세요.",
-                variant: "destructive",
-            });
+            toast({ title: "PDF 생성 실패", description: "다시 시도해주세요.", variant: "destructive" });
         }
     }
 
@@ -343,23 +305,18 @@ export default function Growth() {
                             성장 예측
                         </h1>
                         <p className="text-lg text-emerald-700">
-                            {displayName || "식물"}의 12개월 성장 예측 데이터입니다.
+                            {(displayName || "식물")}의 12개월 성장 예측 데이터입니다.
                         </p>
                         {loading && (
                             <div className="text-emerald-700 mt-1 text-sm">계산 중…</div>
                         )}
                         {error && (
-                            <div className="text-red-600 text-sm mt-1">
-                                에러: {error?.status} {error?.message}
-                            </div>
+                            <div className="text-red-600 text-sm mt-1">에러: {error?.status} {error?.message}</div>
                         )}
                     </div>
                     <div className="flex gap-3 items-center">
                         <Select value={selectedPlantId} onValueChange={setSelectedPlantId}>
-                            <SelectTrigger
-                                className="w-[200px] rounded-lg border-emerald-300"
-                                aria-label="식물 선택"
-                            >
+                            <SelectTrigger className="w-[200px] rounded-lg border-emerald-300" aria-label="식물 선택">
                                 <SelectValue placeholder="식물 선택" />
                             </SelectTrigger>
                             <SelectContent>
@@ -383,10 +340,7 @@ export default function Growth() {
                 </header>
 
                 {/* PDF 출력 대상 영역 */}
-                <div
-                    ref={reportRef}
-                    className="space-y-6 bg-white p-8 rounded-2xl shadow-lg"
-                >
+                <div ref={reportRef} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg">
                     {/* 요약 카드 */}
                     <section aria-label="성장 요약">
                         <Card className="rounded-xl border-emerald-200">
@@ -403,17 +357,12 @@ export default function Growth() {
                                 <div className="text-center">
                                     <p className="text-sm text-emerald-600 mb-1">12개월 후 예상 높이</p>
                                     <p className="text-2xl font-bold text-emerald-800">
-                                        {(summary?.lastHeight ?? 50)?.toFixed?.(1) ??
-                                            summary?.lastHeight ??
-                                            50}{" "}
-                                        cm
+                                        {(summary?.lastHeight ?? 50)?.toFixed?.(1) ?? summary?.lastHeight ?? 50} cm
                                     </p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-sm text-emerald-600 mb-1">예상 범위</p>
-                                    <p className="text-2xl font-bold text-emerald-800">
-                                        {summary?.rangeText || "±10%"}
-                                    </p>
+                                    <p className="text-2xl font-bold text-emerald-800">{summary?.rangeText || "±10%"}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -423,22 +372,13 @@ export default function Growth() {
                     <section aria-label="성장 차트">
                         <Card className="rounded-xl border-emerald-200">
                             <CardHeader>
-                                <CardTitle className="text-emerald-800">
-                                    12개월 성장 예측 차트
-                                </CardTitle>
+                                <CardTitle className="text-emerald-800">12개월 성장 예측 차트</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 {chartRows && chartRows.length > 0 ? (
-                                    <GrowthChart
-                                        rows={chartRows}
-                                        min={minValue ?? 0}
-                                        max={maxValue ?? 200}
-                                        unitLabel="cm"
-                                    />
+                                    <GrowthChart rows={chartRows} min={minValue ?? 0} max={maxValue ?? 200} unitLabel="cm" />
                                 ) : (
-                                    <p className="text-center text-emerald-600 py-8">
-                                        데이터를 불러오는 중...
-                                    </p>
+                                    <p className="text-center text-emerald-600 py-8">데이터를 불러오는 중...</p>
                                 )}
                             </CardContent>
                         </Card>
@@ -464,31 +404,18 @@ export default function Growth() {
                                             </thead>
                                             <tbody>
                                             {monthlyRows.map((r, idx) => (
-                                                <tr
-                                                    key={idx}
-                                                    className="border-b border-emerald-100 hover:bg-emerald-50"
-                                                >
-                                                    <td className="py-3 px-4 text-emerald-700">
-                                                        {r.label}
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right font-bold text-emerald-800">
-                                                        {(r.typical?.toFixed?.(1) ?? r.typical) ?? "-"} cm
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right text-emerald-600">
-                                                        {(r.good?.toFixed?.(1) ?? r.good) ?? "-"} cm
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right text-emerald-600">
-                                                        {(r.bad?.toFixed?.(1) ?? r.bad) ?? "-"} cm
-                                                    </td>
+                                                <tr key={idx} className="border-b border-emerald-100 hover:bg-emerald-50">
+                                                    <td className="py-3 px-4 text-emerald-700">{r.label}</td>
+                                                    <td className="py-3 px-4 text-right font-bold text-emerald-800">{(r.typical?.toFixed?.(1) ?? r.typical) ?? "-"} cm</td>
+                                                    <td className="py-3 px-4 text-right text-emerald-600">{(r.good?.toFixed?.(1) ?? r.good) ?? "-"} cm</td>
+                                                    <td className="py-3 px-4 text-right text-emerald-600">{(r.bad?.toFixed?.(1) ?? r.bad) ?? "-"} cm</td>
                                                 </tr>
                                             ))}
                                             </tbody>
                                         </table>
                                     </div>
                                 ) : (
-                                    <p className="text-center text-emerald-600 py-8">
-                                        데이터를 불러오는 중...
-                                    </p>
+                                    <p className="text-center text-emerald-600 py-8">데이터를 불러오는 중...</p>
                                 )}
                             </CardContent>
                         </Card>
@@ -499,9 +426,7 @@ export default function Growth() {
                         <section aria-label="AI 종합 설명">
                             <Card className="rounded-xl border-blue-200">
                                 <CardHeader>
-                                    <CardTitle className="text-blue-800">
-                                        AI 종합 설명 및 조언
-                                    </CardTitle>
+                                    <CardTitle className="text-blue-800">AI 종합 설명 및 조언</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <aside className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg whitespace-pre-line text-blue-800 leading-relaxed">

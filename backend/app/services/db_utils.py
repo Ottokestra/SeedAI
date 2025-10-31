@@ -32,14 +32,20 @@ def save_identification_data(identification: PlantIdentification, file_hash: Opt
     Returns:
         저장된 데이터 ID
     """
+    print(f"[db_utils] 식물 분석 데이터 저장 시작: {identification.plant_name}")
+    print(f"[db_utils] 저장 경로: {IDENTIFICATION_FILE}")
     # 기존 데이터 로드
     identifications = {}
     if IDENTIFICATION_FILE.exists():
         try:
             with open(IDENTIFICATION_FILE, 'r', encoding='utf-8') as f:
                 identifications = json.load(f)
-        except:
+            print(f"[db_utils] 기존 데이터 로드 완료: {len(identifications)}개 항목")
+        except Exception as e:
+            print(f"[db_utils] 기존 데이터 로드 실패: {e}")
             identifications = {}
+        else:
+            print(f"[db_utils] 기존 데이터 파일 없음, 새로 생성")
     
     # 데이터 ID 생성 (식물명 + 타임스탬프)
     data_id = f"{identification.plant_name}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
@@ -61,9 +67,14 @@ def save_identification_data(identification: PlantIdentification, file_hash: Opt
     identifications[data_id] = identification_data
     
     # 파일에 저장
-    with open(IDENTIFICATION_FILE, 'w', encoding='utf-8') as f:
-        json.dump(identifications, f, ensure_ascii=False, indent=2)
-    
+    try:
+        with open(IDENTIFICATION_FILE, 'w', encoding='utf-8') as f:
+            json.dump(identifications, f, ensure_ascii=False, indent=2)
+        print(f"[db_utils] 데이터 저장 완료: {data_id}")
+    except Exception as e:
+        print(f"[db_utils] 데이터 저장 실패: {e}")
+        raise
+
     return data_id
 
 
@@ -78,28 +89,47 @@ def load_identification_data(data_id: Optional[str] = None, plant_name: Optional
     Returns:
         식물 분석 데이터 또는 None
     """
+
+    print(f"[db_utils] 식물 분석 데이터 로드 시도: data_id={data_id}, plant_name={plant_name}")
+    print(f"[db_utils] 로드 경로: {IDENTIFICATION_FILE}")
+
     if not IDENTIFICATION_FILE.exists():
+        print(f"[db_utils] 데이터 파일이 존재하지 않음: {IDENTIFICATION_FILE}")
         return None
     
     try:
         with open(IDENTIFICATION_FILE, 'r', encoding='utf-8') as f:
             identifications = json.load(f)
-        
+        print(f"[db_utils] 데이터 파일 로드 완료: {len(identifications)}개 항목")
+
         if data_id:
-            return identifications.get(data_id)
+            result = identifications.get(data_id)
+            if result:
+                print(f"[db_utils] data_id로 데이터 찾음: {data_id}")
+            else:
+                print(f"[db_utils] data_id로 데이터 찾기 실패: {data_id}")
+            return result
         elif plant_name:
             # 해당 식물명의 최신 데이터 찾기
             matching = [
                 data for data in identifications.values()
                 if data.get("identification", {}).get("plant_name") == plant_name
             ]
+            print(f"[db_utils] plant_name으로 검색: '{plant_name}' -> {len(matching)}개 매칭")
             if matching:
                 # 최신 데이터 반환
-                return sorted(matching, key=lambda x: x.get("timestamp", ""), reverse=True)[0]
-        
+                result = sorted(matching, key=lambda x: x.get("timestamp", ""), reverse=True)[0]
+                print(f"[db_utils] 최신 데이터 찾음: {result.get('id')} (timestamp: {result.get('timestamp')})")
+                return result
+            else:
+                print(f"[db_utils] plant_name으로 데이터 찾기 실패: '{plant_name}'")
+                print(f"[db_utils] 저장된 식물명 목록: {[d.get('identification', {}).get('plant_name') for d in identifications.values()]}")
+
         return None
     except Exception as e:
-        print(f"식물 분석 데이터 로드 오류: {e}")
+        print(f"[db_utils] 식물 분석 데이터 로드 오류: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 

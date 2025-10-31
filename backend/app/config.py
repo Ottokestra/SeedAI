@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     plant_classifier_model: str = "umutbozdag/plant-identity"  # 식물 전문 모델 (20종)
     text_generation_model: str = "gpt2"  # 경량 공개 모델
     text_generation_model: str = "skt/kogpt2-base-v2"  # 한국어 최적화 모델 (GPT-2 대신 사용)
+    text_generation_model: str = "none"  # koGPT2 비활성화 - Qwen 모델 사용 (textgen_adapter.py)
     image_generation_model: str = "stabilityai/sd-turbo"
     
     # 선택적 Hugging Face 토큰 (rate limit 완화용)
@@ -49,8 +50,3 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# 환경 변수 로드 확인
-if settings.openai_api_key:
-    print(f"[설정 확인] OpenAI API 키가 설정되었습니다. (길이: {len(settings.openai_api_key)} 문자)")
-else:
-    print("[설정 확인] OpenAI API 키가 설정되지 않았습니다. .env 파일을 확인하세요.")

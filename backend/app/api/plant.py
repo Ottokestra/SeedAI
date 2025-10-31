@@ -597,6 +597,7 @@ async def get_monthly_data_analysis(
 
         return MonthlyDataAnalysis(
             identification=result["identification"],
+            growth_graph=result["growth_graph"], 
             monthly_data=monthly_data_rows,
             comprehensive_analysis=result["comprehensive_analysis"],
             success=True,
