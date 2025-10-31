@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Upload, Droplet, Sun, Thermometer, Info, TrendingUp, Loader2, Bug } from 'lucide-react';
 import GrowthChart from './GrowthChart';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
