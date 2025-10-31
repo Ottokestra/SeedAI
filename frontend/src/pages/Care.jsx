@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, AlertTriangle, Bug, Shield } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Bug, Shield, TrendingUp, Calendar as CalendarCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Care() {
@@ -154,6 +154,30 @@ export default function Care() {
 
         {/* 관리법 상세 */}
         <CareTips care={care} />
+
+        {/* 액션 버튼 - 성장도 및 우리아이 */}
+        <div className="flex flex-wrap gap-4">
+          <Button
+            onClick={() => {
+              const plantId = care.name.toLowerCase().replace(/\s+/g, '-');
+              navigate(`/growth/${plantId}`, {
+                state: { identification, careGuide, uploadedImageUrl }
+              });
+            }}
+            className="flex-1 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg"
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            성장도 확인하기
+          </Button>
+          <Button
+            onClick={() => navigate('/mychild')}
+            variant="outline"
+            className="flex-1 border-emerald-500 text-emerald-700 hover:bg-emerald-50 rounded-full"
+          >
+            <CalendarCheck className="w-4 h-4 mr-2" />
+            우리아이에서 관리하기
+          </Button>
+        </div>
 
         {/* 병해충 진단 */}
         <section aria-label="병해충 진단">

@@ -241,7 +241,7 @@ export default function Home() {
             className="rounded-2xl overflow-hidden border"
           >
             <motion.img
-              src="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1600&auto=format&fit=crop"
+              src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop"
               alt="깔끔하게 정리된 실내 식물 공간"
               className="w-full h-full object-cover"
               whileHover={{ scale: 1.05 }}
@@ -289,4 +289,3 @@ export default function Home() {
     </div>
   );
 }
-
