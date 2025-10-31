@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Camera, Scan, Leaf, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const steps = [
   {
@@ -31,35 +30,10 @@ const steps = [
 ];
 
 export function HowItWorksSection() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6 }
-    }
-  };
-
   return (
     <section id="how-it-works" className="bg-green-50/50 py-16 sm:py-24">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
+        <div className="text-center">
           <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
             How It Works
           </span>
@@ -69,39 +43,31 @@ export function HowItWorksSection() {
           <p className="mt-4 text-lg text-gray-600">
             복잡한 설정 없이 누구나 쉽게 사용할 수 있습니다.
           </p>
-        </motion.div>
+        </div>
 
         {/* 4단계 카드 그리드 */}
-        <motion.div 
-          className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
+        <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step) => (
-            <motion.div key={step.step} variants={cardVariants}>
-              <Card className="bg-white text-center shadow-lg">
-                <CardContent className="p-6">
-                  <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
-                    <span className="absolute -top-2 -left-2 text-7xl font-bold text-gray-100">
-                      {step.step}
-                    </span>
-                    <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-lg bg-green-600">
-                      {step.icon}
-                    </div>
+            <Card key={step.step} className="bg-white text-center shadow-lg">
+              <CardContent className="p-6">
+                <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
+                  <span className="absolute -top-2 -left-2 text-7xl font-bold text-gray-100">
+                    {step.step}
+                  </span>
+                  <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-lg bg-green-600">
+                    {step.icon}
                   </div>
-                  <h3 className="mt-6 text-xl font-semibold text-gray-900">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2 text-gray-600">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
+                </div>
+                <h3 className="mt-6 text-xl font-semibold text-gray-900">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-gray-600">
+                  {step.description}
+                </p>
+              </CardContent>
+            </Card>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Upload, Droplet, Sun, Thermometer, Info, TrendingUp, Loader2, Bug } from 'lucide-react';
+import { Upload, Droplet, Sun, Thermometer, Info, TrendingUp, Loader2 } from 'lucide-react';
 import GrowthChart from './GrowthChart';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 
 // --- 기능 카드 데이터 ---
 const features = [
@@ -14,12 +12,6 @@ const features = [
     title: '식물 종 식별 및 분류',
     description: '사진 한 장으로 식물의 종을 정확하게 식별하고 분류합니다. AI 딥러닝 기술로 99% 이상의 정확도를 자랑합니다.',
     icon: <Upload className="h-8 w-8 text-green-600" />,
-  },
-  {
-    id: 'diagnosis',
-    title: '병충해 진단',
-    description: '식물의 잎을 촬영하면 AI가 병충해를 자동으로 감지하고, GPT 기반 맞춤형 치료법을 제공합니다.',
-    icon: <Bug className="h-8 w-8 text-green-600" />,
   },
   {
     id: 'care_guide',
@@ -33,38 +25,19 @@ const features = [
     description: '현재 환경과 관리 상태를 기반으로 식물의 성장을 예측하고, 최적의 성장 조언을 제안합니다.',
     icon: <TrendingUp className="h-8 w-8 text-green-600" />,
   },
+  {
+    id: 'disease_management',
+    title: '질병 관리 및 진단',
+    description: '식물의 이상 증상을 조기에 발견하고, 질병을 진단하며, 치료 방법을 안내합니다.',
+    icon: <Loader2 className="h-8 w-8 text-green-600" />,
+  },
 ];
 
 export function FeaturesSection() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.5 }
-    }
-  };
-
   return (
     <section id="features" className="bg-white py-16 sm:py-24">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
+        <div className="text-center">
           <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
             Features
           </span>
@@ -74,22 +47,14 @@ export function FeaturesSection() {
           <p className="mt-4 text-lg text-gray-600">
             AI 기술 관리의 모든 과정을 간편하고 정확하게 도와드립니다.
           </p>
-        </motion.div>
+        </div>
 
         {/* 기능 카드 그리드 */}
-        <motion.div 
-          className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
+        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2">
           {features.map((feature) => (
-            <motion.div key={feature.id} variants={itemVariants}>
-              <FeatureDialog feature={feature} />
-            </motion.div>
+            <FeatureDialog key={feature.id} feature={feature} />
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
@@ -117,9 +82,9 @@ function FeatureDialog({ feature }) {
       <DialogContent className="sm:max-w-2xl">
         {/* 기능 ID별로 다른 팝업 콘텐츠를 렌더링합니다. */}
         {feature.id === 'identification' && <IdentificationContent />}
-        {feature.id === 'diagnosis' && <DiagnosisContent />}
         {feature.id === 'care_guide' && <CareGuideContent />}
         {feature.id === 'growth_prediction' && <GrowthPredictionContent />}
+        {feature.id === 'disease_management' && <IdentificationContent />} 
       </DialogContent>
     </Dialog>
   );
@@ -131,10 +96,9 @@ function IdentificationContent() {
 
   const handleAnalyze = () => {
     setStatus('loading');
-    // 3초 후 분석 완료
     setTimeout(() => {
       setStatus('success');
-    }, 3000);
+    }, 2000);
   };
 
   const handleReset = () => {
@@ -144,238 +108,61 @@ function IdentificationContent() {
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl">🌿 식물 종 식별 및 분류</DialogTitle>
-        <DialogDescription className="text-sm">
-          시연용 데모입니다. 실제 기능은 "식별" 메뉴를 이용하세요.
+        <DialogTitle className="text-2xl">식물 종 식별 및 분류</DialogTitle>
+        <DialogDescription>
+          사진 한 장으로 식물의 종을 정확하게 식별하고 분류합니다.
         </DialogDescription>
       </DialogHeader>
-      <div className="py-3">
+      <div className="py-4">
         {status === 'idle' && (
-          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-green-200 bg-green-50/30 p-6">
+          <div className="flex flex-col items-center justify-center rounded-lg border p-6">
             <img
-              src="https://images.unsplash.com/photo-1459156212016-c812468e2115?q=80&w=800&auto=format&fit=crop"
-              alt="시연용 몬스테라 이미지"
-              className="w-full h-40 rounded-lg object-cover shadow-md mb-3"
+              src="/images/mimg.jpg"
+              alt="식물 샘플 이미지"
+              className="mx-auto mb-4 max-h-60 w-auto rounded-md object-contain"
             />
-            <p className="text-gray-700 text-center font-medium mb-1">
-              📸 분석할 준비가 완료되었습니다
-            </p>
-            <p className="text-gray-500 text-center text-xs">
-              아래 버튼을 눌러 AI 분석을 체험해보세요
+            <p className="text-gray-600 text-center">
+              분석하기 버튼을 눌러 AI 식별 기능을 체험해보세요
             </p>
           </div>
         )}
         {status === 'loading' && (
-          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-green-300 bg-green-50 p-8">
-            <Loader2 className="h-12 w-12 animate-spin text-green-600 mb-3" />
-            <p className="font-semibold text-gray-800 mb-1">AI 분석 중...</p>
-            <p className="text-xs text-gray-600">
-              식물 특징을 인식하고 있습니다
-            </p>
+          <div className="flex flex-col items-center justify-center rounded-lg border p-12">
+            <Loader2 className="h-12 w-12 animate-spin text-green-600" />
+            <p className="mt-4 text-gray-600">분석 중입니다... 잠시만 기다려주세요.</p>
           </div>
         )}
         {status === 'success' && (
-          <div className="rounded-lg border-2 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <img
-                src="https://images.unsplash.com/photo-1459156212016-c812468e2115?q=80&w=800&auto=format&fit=crop"
-                alt="분석 완료: 몬스테라"
-                className="w-24 h-24 rounded-lg object-cover shadow-md flex-shrink-0"
-              />
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-1 bg-green-500 text-white px-2 py-1 rounded-full text-xs mb-2">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="font-medium">식별 완료</span>
-                </div>
-                <h4 className="font-bold text-lg text-gray-900">몬스테라 델리시오사</h4>
-                <p className="text-xs text-gray-600 italic">Monstera deliciosa</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-3 mb-2">
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="text-gray-500">분류:</span>
-                  <span className="font-medium ml-1">천남성과</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">원산지:</span>
-                  <span className="font-medium ml-1">열대 아메리카</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-gray-500">신뢰도:</span>
-                  <span className="font-bold text-green-600 ml-1">98.7%</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-green-100 border border-green-300 rounded-lg p-2">
-              <p className="text-xs text-green-800">
-                💡 시연용 데모입니다. 실제 기능은 "식별" 메뉴를 이용하세요.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <Button
-          onClick={status === 'success' ? handleReset : handleAnalyze}
-          disabled={status === 'loading'}
-          className="flex-1 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-        >
-          {status === 'idle' && '🔍 분석 시작하기'}
-          {status === 'loading' && (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              분석 중...
-            </>
-          )}
-          {status === 'success' && '🔄 다시 분석하기'}
-        </Button>
-        {status === 'success' && (
-          <Link to="/identify" className="flex-1">
-            <Button variant="outline" className="w-full border-green-600 text-green-700 hover:bg-green-50">
-              실제 사용하기 →
-            </Button>
-          </Link>
-        )}
-      </div>
-    </>
-  );
-}
-
-// --- 2. '병충해 진단' 팝업 (진단 시연) ---
-function DiagnosisContent() {
-  const [status, setStatus] = useState('idle');
-
-  const handleDiagnose = () => {
-    setStatus('loading');
-    // 3초 후 진단 완료
-    setTimeout(() => {
-      setStatus('success');
-    }, 3000);
-  };
-
-  const handleReset = () => {
-    setStatus('idle');
-  };
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle className="text-xl">🐛 병충해 진단</DialogTitle>
-        <DialogDescription className="text-sm">
-          시연용 데모입니다. 실제 기능은 "진단해줘" 메뉴를 이용하세요.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="py-3">
-        {status === 'idle' && (
-          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-emerald-200 bg-emerald-50/30 p-6">
+          <div className="rounded-lg border bg-green-50 p-6 text-center">
+            <h3 className="text-xl font-semibold text-green-800 mb-4">분석 완료!</h3>
             <img
-              src="https://images.unsplash.com/photo-1459156212016-c812468e2115?q=80&w=800&auto=format&fit=crop"
-              alt="시연용 몬스테라 이미지"
-              className="w-full h-40 rounded-lg object-cover shadow-md mb-3"
+              src="/images/mimg.jpg"
+              alt="분석 결과: 몬스테라 델리시오사"
+              className="mx-auto mb-4 max-h-60 w-auto rounded-md object-contain"
             />
-            <p className="text-gray-700 text-center font-medium mb-1">
-              🔍 진단할 준비가 완료되었습니다
+            <p className="text-lg">
+              <span className="font-bold">품종:</span> 몬스테라 델리시오사
             </p>
-            <p className="text-gray-500 text-center text-xs">
-              아래 버튼을 눌러 AI 병충해 진단을 체험해보세요
+            <p className="text-gray-600">
+              <span className="font-bold">분류:</span> 천남성과 (Araceae)
             </p>
-          </div>
-        )}
-        {status === 'loading' && (
-          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-emerald-300 bg-emerald-50 p-8">
-            <Loader2 className="h-12 w-12 animate-spin text-emerald-600 mb-3" />
-            <p className="font-semibold text-gray-800 mb-1">AI 진단 중...</p>
-            <p className="text-xs text-gray-600">
-              YOLOv8이 병충해를 감지하고 있습니다
-            </p>
-          </div>
-        )}
-        {status === 'success' && (
-          <div className="rounded-lg border-2 border-emerald-400 bg-gradient-to-br from-emerald-50 to-green-50 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <img
-                src="https://images.unsplash.com/photo-1459156212016-c812468e2115?q=80&w=800&auto=format&fit=crop"
-                alt="진단 완료: 몬스테라"
-                className="w-24 h-24 rounded-lg object-cover shadow-md flex-shrink-0"
-              />
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded-full text-xs mb-2">
-                  <Bug className="w-3 h-3" />
-                  <span className="font-medium">병충해 감지</span>
-                </div>
-                <h4 className="font-bold text-lg text-gray-900">잎마름병</h4>
-                <p className="text-xs text-gray-600 italic">Leaf Blight</p>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg p-3 mb-2">
-              <div className="space-y-2 text-xs">
-                <div>
-                  <span className="text-gray-500">식물:</span>
-                  <span className="font-medium ml-1">몬스테라</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">감지 신뢰도:</span>
-                  <span className="font-bold text-red-600 ml-1">87.3%</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">심각도:</span>
-                  <span className="font-medium text-orange-600 ml-1">중간</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-2">
-              <p className="text-xs font-semibold text-amber-900 mb-1">🤖 GPT 추천 치료법</p>
-              <p className="text-xs text-amber-800">
-                • 감염된 잎을 제거하고 소각합니다<br />
-                • 통풍을 좋게 하고 과습을 피합니다<br />
-                • 살균제를 7-10일 간격으로 2-3회 살포합니다<br />
-                • 건강한 새 잎이 나올 때까지 비료 주기를 줄입니다
-              </p>
-            </div>
-
-            <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-2">
-              <p className="text-xs text-emerald-800">
-                💡 시연용 데모입니다. 실제 기능은 "진단해줘" 메뉴를 이용하세요.
-              </p>
-            </div>
           </div>
         )}
       </div>
-      <div className="flex gap-2">
-        <Button
-          onClick={status === 'success' ? handleReset : handleDiagnose}
-          disabled={status === 'loading'}
-          className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
-        >
-          {status === 'idle' && '🔍 진단 시작하기'}
-          {status === 'loading' && (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              진단 중...
-            </>
-          )}
-          {status === 'success' && '🔄 다시 진단하기'}
-        </Button>
-        {status === 'success' && (
-          <Link to="/pest" className="flex-1">
-            <Button variant="outline" className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50">
-              실제 사용하기 →
-            </Button>
-          </Link>
-        )}
-      </div>
+      <Button
+        onClick={status === 'success' ? handleReset : handleAnalyze}
+        disabled={status === 'loading'}
+        className="w-full bg-green-600 text-white hover:bg-green-700"
+      >
+        {status === 'idle' && '분석하기'}
+        {status === 'loading' && '분석 중...'}
+        {status === 'success' && '다시 분석하기'}
+      </Button>
     </>
   );
 }
 
-// --- 3. '맞춤형 관리법' 팝업 (텍스트 정보) ---
+// --- 2. '맞춤형 관리법' 팝업 (텍스트 정보) ---
 function CareGuideContent() {
   return (
     <>
@@ -415,7 +202,7 @@ function CareGuideContent() {
   );
 }
 
-// --- 4. '성장 예상 분석' 팝업 (그래프) ---
+// --- 3. '성장 예상 분석' 팝업 (그래프) ---
 function GrowthPredictionContent() {
   // 샘플 성장 데이터
   const sampleData = [

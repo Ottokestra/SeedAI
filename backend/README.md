@@ -342,6 +342,32 @@ PlantRecog 모델로 식물 이미지를 분석합니다 (299종 꽃 인식).
 ### `GET /docs`
 FastAPI 자동 생성 문서 (Swagger UI)
 
+### `POST /api/plant/growth-insight`
+스캔(자동 모델 선택) → 생육분석 텍스트 → 생장예측그래프를 한 번에 생성합니다. 이미지 생성은 제외됩니다.
+
+요청:
+- Content-Type: `multipart/form-data`
+- Body: `file` (이미지 파일)
+
+응답 예시:
+```json
+{
+  "identification": { "plant_name": "몬스테라", "confidence": 0.91 },
+  "growth_graph": {
+    "points": [
+      { "month": 0, "growth_index": 0.12 },
+      { "month": 1, "growth_index": 0.31 },
+      { "month": 3, "growth_index": 0.72 },
+      { "month": 6, "growth_index": 0.93 }
+    ],
+    "note": "성장 지수는 환경/관리 상태에 따라 달라질 수 있습니다."
+  },
+  "analysis_text": "한국어 생장 추론 종합 설명...",
+  "success": true,
+  "message": "몬스테라 성장 인사이트 생성이 완료되었습니다."
+}
+```
+
 ## 🔄 주요 변경 사항 (v2.0)
 
 ### ✅ API 토큰 불필요

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Leaf } from 'lucide-react';
+import { Leaf, TrendingUp } from 'lucide-react';
 
 export default function ResultList({ identification, careGuide, growthPrediction, uploadedImageUrl }) {
   const navigate = useNavigate();
@@ -74,10 +74,21 @@ export default function ResultList({ identification, careGuide, growthPrediction
                 onClick={() => navigate(`/care/${plantId}`, { 
                   state: { identification, careGuide, uploadedImageUrl } 
                 })}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full"
                 aria-label={`${identification.plant_name} 관리법 보기`}
               >
                 관리법 보기
+              </Button>
+              <Button
+                onClick={() => navigate(`/growth/${plantId}`, { 
+                  state: { identification, growthPrediction, uploadedImageUrl } 
+                })}
+                variant="outline"
+                className="flex-1 border-emerald-500 text-emerald-700 hover:bg-emerald-50 rounded-full"
+                aria-label={`${identification.plant_name} 성장예측 보기`}
+              >
+                <TrendingUp className="w-4 h-4 mr-2" aria-hidden="true" />
+                성장예측
               </Button>
             </div>
           </CardContent>

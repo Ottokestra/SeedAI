@@ -57,7 +57,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.6 }}
           >
-           복잡한 식물 관리, 인공지능이 쉽고 정확하게 분석하고 안내합니다.
+            흙과 잎, 뿌리까지. 복잡한 식물 관리, 인공지능이 쉽고 정확하게 분석하고 안내합니다.
           </motion.p>
           
           {/* 버튼 그룹 - stagger 애니메이션 */}
@@ -210,10 +210,10 @@ export default function Home() {
         </motion.h2>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.45 }}
             className="rounded-2xl border p-6"
           >
             <p className="leading-relaxed text-neutral-700">
@@ -234,58 +234,34 @@ export default function Home() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.45 }}
             className="rounded-2xl overflow-hidden border"
           >
-            <motion.img
-              src="https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=2070&auto=format&fit=crop"
+            <img
+              src="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1600&auto=format&fit=crop"
               alt="깔끔하게 정리된 실내 식물 공간"
               className="w-full h-full object-cover"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.4 }}
             />
           </motion.div>
         </div>
       </section>
 
       {/* CTA Strip */}
-      <section className="bg-emerald-600 overflow-hidden">
-        <motion.div 
-          className="max-w-5xl mx-auto px-6 py-10 text-white flex flex-col md:flex-row items-center justify-between gap-4"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.h3 
-            className="text-2xl font-semibold"
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+      <section className="bg-emerald-600">
+        <div className="max-w-5xl mx-auto px-6 py-10 text-white flex flex-col md:flex-row items-center justify-between gap-4">
+          <h3 className="text-2xl font-semibold">오늘부터 더 똑똑하게 키워요, 새싹아이와 함께</h3>
+          <Link
+            to="/identify"
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-medium text-emerald-700 hover:bg-emerald-50"
           >
-            오늘부터 더 똑똑하게 키워요, 새싹아이와 함께
-          </motion.h3>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Link
-              to="/identify"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
-            >
-              지금 시작하기 <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </motion.div>
+            지금 시작하기 <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </section>
     </div>
   );
 }
+

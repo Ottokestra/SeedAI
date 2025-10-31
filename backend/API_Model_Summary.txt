@@ -1,0 +1,61 @@
+# API 모델 사용 현황 및 응답 형식
+
+## 📊 주요 기능 및 응답 필드 (5개)
+
+| 필드명                 | 타입   | 설명                                                              |
+|------------------------|--------|-------------------------------------------------------------------|
+| identification         | object | 식물 종 식별 결과 (이름, 학명, 신뢰도)                           |
+| growth_graph           | object | 성장 예측 그래프 (좋은/나쁜 조건 실선 지표, 1년 도표)             |
+| monthly_data           | array  | 월별 데이터 테이블 (현재~12개월, 예상/좋음/나쁨 높이)            |
+| comprehensive_analysis | string | AI 데이터 분석 및 생장 조건 추론 텍스트                           |
+| success                | bool   | 요청 성공 여부                                                    |
+
+## 📝 응답 예시 (성공)
+
+```json
+{
+  "identification": {
+    "plant_name": "장미",
+    "scientific_name": "Rosa",
+    "confidence": 0.95
+  },
+  "growth_graph": {
+    "good_growth": [
+      {"period": 0, "size": 9.0},
+      {"period": 12, "size": 22.2}
+    ],
+    "bad_growth": [
+      {"period": 0, "size": 9.0},
+      {"period": 12, "size": 21.7}
+    ],
+    "min_size": 8.0,
+    "max_size": 22.2,
+    "period_unit": "month"
+  },
+  "monthly_data": [
+    {"period": "현재", "expected_height": 9.0, "good_condition_height": 9.0, "bad_condition_height": 9.0},
+    {"period": "12개월", "expected_height": 21.9, "good_condition_height": 22.2, "bad_condition_height": 21.7}
+  ],
+  "comprehensive_analysis": "요약\n- 대상: 장미 / 추정 상한(K): 22.2 cm / 시작 높이: 9.0 cm\n- 전반적으로 장미은 안정적인 신장세를 보이며 관리 조건에 따라 편차가 발생할 수 있습니다.\n\n관리 팁\n- 밝은 간접광을 유지하고 흙이 60~70% 마르면 충분히 관수하세요.\n- 배수력 유지(펄라이트/마사 혼합)와 통풍 확보가 중요합니다.\n\n주의할 점\n- 장시간 직사광은 엽소를 유발할 수 있습니다.",
+  "success": true
+}
+```
+
+**구현 핵심 코드**:
+- `app/services/growth.py` → `generate_growth_graph()`: 로지스틱 곡선 알고리즘으로 좋은/나쁜 조건 그래프 생성 (30% 성장률 차이)
+- `app/services/textgen_adapter.py` → `render_plant_analysis()`: Qwen LLM 또는 템플릿 기반으로 식물 성장 분석 텍스트 생성
+- `app/api/plant.py` → `POST /api/plant/growth-insight`: 종분석 후 성장 그래프 및 월별 데이터 자동 생성
+
+## ❌ 에러 응답 형식
+
+```json
+{
+  "detail": "에러 메시지"
+}
+```
+
+**주요 에러 케이스**:
+- 이미지 파일 아님: `{"detail": "이미지 파일만 업로드 가능합니다."}` (HTTP 400)
+- 파일 크기 초과: `{"detail": "파일 크기는 10MB 이하여야 합니다."}` (HTTP 400)
+- 식물 식별 실패: `{"detail": "식물을 식별할 수 없습니다. 더 명확한 이미지를 업로드해주세요."}` (HTTP 422)
+- 서버 오류: `{"detail": "성장 인사이트 생성 중 오류가 발생했습니다: ..."}` (HTTP 500)

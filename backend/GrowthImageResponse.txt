@@ -1,0 +1,15 @@
+GrowthImageResponse 🚧
+
+구현 예정: 백엔드 팀원이 구현 예정입니다.
+성장 예상 과정 이미지 생성 결과를 나타내는 모델입니다.
+
+필드 | 타입 | 필수 | 설명
+---|---|---|---
+image_url | string | X | 생성된 이미지 URL
+image_base64 | string | X | Base64 인코딩된 이미지 데이터
+stage | string | ✅ | 성장 단계
+
+예시
+
+{ // TODO: 백엔드 팀원이 구현 후 예시 작성}
+
